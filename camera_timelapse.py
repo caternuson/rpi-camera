@@ -12,7 +12,7 @@
 # 2014-10-30
 # Carter Nelson
 #===========================================================================
-import rpi_camera
+import campi
 import time
 import Image
 import ImageDraw
@@ -28,22 +28,22 @@ MIN_IMGS = 1                    # mimumum number of images (1 is pretty stupid)
 root_dir = os.getcwd()
 
 # Camera setup
-camera = rpi_camera.RpiCamera()
+camera = campi.Campi()
 resolution = (1920, 1080)                   # resolution of images
 jpeg_quality = 100                          # jpeg image quality
-camera.get_camera().resolution = resolution
+camera.set_cam_config(resolution=resolution,quality=jpeg_quality)
 
 # Default time lapse config
-delta_time = 10                             # delta time in seconds
-total_imgs = 3                            # total number of images
+delta_time = 60                             # delta time in seconds
+total_imgs = 500                           # total number of images
 total_time = delta_time * (total_imgs-1)    # total time in seconds
 
 # List of buttons and dictionary of state
-buttons = [rpi_camera.BTN_1,
-           rpi_camera.BTN_2,
-           rpi_camera.BTN_3,
-           rpi_camera.BTN_4,
-           rpi_camera.BTN_5]
+buttons = [campi.BTN_1,
+           campi.BTN_2,
+           campi.BTN_3,
+           campi.BTN_4,
+           campi.BTN_5]
 button_state = {}
 button_pressed = False
 
@@ -66,6 +66,10 @@ TIME_2          = (2,36)
 TOT_IMG         = (60,36)
 WHOLE_SCREEN    = ((0,0),camera.get_lcd_size())
 OK_CONFIRM      = (4,14)
+PROG_BAR_H      = 31
+PROG_BAR_W      = 14
+PROG_BAR_LOC    = (8,4)
+PROG_BAR_BOX    = (PROG_BAR_LOC,(PROG_BAR_LOC[0]+PROG_BAR_W,PROG_BAR_LOC[1]+PROG_BAR_H))
 
 
 def disp_big_msg(msg, location=BIG_MSG):
@@ -90,7 +94,22 @@ def disp_show_summary():
     disp_draw.text(BIG4_2, "%04d" % (total_imgs), font=font_large)       
     disp_draw.text(TIME_1, time.strftime("     %H:%M:%S", time.gmtime(total_time)), font=font_small)
     disp_draw.text(OK_CONFIRM,"OK?", font=font_small)
+    camera.disp_image(disp_image)
+    
+def disp_show_status(time_to_next, image_count, time_remaining):
+    disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+    disp_draw.rectangle(PROG_BAR_BOX, outline=0, fill=255)
+    #progress = int(float(PROG_BAR_H) * ( float(image_count)/float(total_imgs)))
+    progress = int(float(PROG_BAR_H) * ((total_time-time_remaining)/total_time))
+    PROG_BAR_FILL = ((PROG_BAR_LOC[0], PROG_BAR_LOC[1]+PROG_BAR_H-progress),
+                    (PROG_BAR_LOC[0]+PROG_BAR_W,PROG_BAR_LOC[1]+PROG_BAR_H))
+    disp_draw.rectangle(PROG_BAR_FILL, outline=0, fill=0)
+    disp_draw.text(BIG4_2, "%04d" % (image_count), font=font_large)
+    disp_draw.text(BIG4_1,"%04d" % (time_to_next), font=font_large)
+    disp_draw.text(TIME_2, time.strftime("%H:%M:%S", time.gmtime(time_remaining)), font=font_small)
+    disp_draw.text(TOT_IMG, "%04d" % (total_imgs), font=font_small)
     camera.disp_image(disp_image)    
+
 
 #--------------------------------------------------------------------
 # MAIN 
@@ -105,16 +124,16 @@ while True:
         button_state[button] = camera.get_button(button)
     
     # Up/Down buttons for total images and delta time   
-    if (button_state[rpi_camera.BTN_2]):
+    if (button_state[campi.BTN_2]):
         total_imgs += 1
         button_pressed = True
-    if (button_state[rpi_camera.BTN_3]):
+    if (button_state[campi.BTN_3]):
         total_imgs -= 1
         button_pressed = True
-    if (button_state[rpi_camera.BTN_4]):
+    if (button_state[campi.BTN_4]):
         delta_time += 1
         button_pressed = True
-    if (button_state[rpi_camera.BTN_5]):
+    if (button_state[campi.BTN_5]):
         delta_time -= 1
         button_pressed = True
               
@@ -131,24 +150,25 @@ while True:
         button_pressed = False
         
     # Time lapse start button
-    if (button_state[rpi_camera.BTN_1]):
+    if (button_state[campi.BTN_1]):
         
         # Display summary
         disp_show_summary()
         
         # Ask for verification
-        print "Start new timelapse?",
-        time.sleep(2*DEBOUNCE)
+        print "Start new timelapse?"
+        # Prevent hair trigger on verify button
+        time.sleep(10*DEBOUNCE)
         while True:
             for button in buttons:
                 button_state[button] = camera.get_button(button)
-            if (button_state[rpi_camera.BTN_1]):
+            if (button_state[campi.BTN_1]):
                 start_timelapse = True
                 break
-            if (button_state[rpi_camera.BTN_2] or
-                button_state[rpi_camera.BTN_3] or
-                button_state[rpi_camera.BTN_4] or
-                button_state[rpi_camera.BTN_5]):
+            if (button_state[campi.BTN_2] or
+                button_state[campi.BTN_3] or
+                button_state[campi.BTN_4] or
+                button_state[campi.BTN_5]):
                 start_timelapse = False
                 break
             time.sleep(DEBOUNCE)
@@ -157,73 +177,53 @@ while True:
             
             # Camera setup takes a while, so provide a wait message 
             print "OK."  
-            disp_big_msg(" WAIT ")
-
+            disp_big_msg("  OK  ")
+            
             # Create directory for files and go there
             timelapse_name = time.strftime("%Y%m%d_%H%M",time.localtime())
-            os.mkdir(timelapse_name)
+            try:
+                os.mkdir(timelapse_name)
+            except OSError:
+                # directory exist
+                # not likely in real world scenario ?
+                # ignore and overwrite, for now
+                pass
             os.chdir(timelapse_name)
-                        
-            # Configure camera
-            # moved this to global setup
-            '''
-            print "Camera configure."
-            camera.get_camera().resolution = resolution
-            '''
             
-            # Warm up camera
-            # IS THIS NEEDED? removed for now
-            '''
-            camera.get_camera().start_preview()
-            print "Camera warm up."
-            time.sleep(2)
-            print "Warm up complete."
-            '''
+            # Slight pause before first image
+            time.sleep(1)
             
+            # Mark the time                  
             start_time  = time.time()
             finish_time = start_time + total_time
+            
             # Try block for image capture
-            try:
-                disp_big_msg(" TAKE ")
-                print("TAKE")
-                acquire_start = time.time()
+            try:                
                 # Main time lapse loop
-                for i, filename in enumerate(camera.get_camera().capture_continuous(timelapse_name+'_{counter:04d}.jpg',quality=jpeg_quality)):
-                    acquire_finish = time.time()
-                    acquire_time = acquire_finish - acquire_start
-                    frame = i+1
-                    print "[{0}/{1}]:{2}  DT={3}".format(frame,total_imgs,filename,acquire_time)
-                    
-                    # Stop when all images acquired
-                    if (frame==total_imgs):
-                        break
-                    
-                    # Update display while waiting for time to lapse
-                    time_to_next = delta_time - acquire_time
-                    print "Waiting for time to lapse."
-                    while (time_to_next>0):
-                        current_time = time.time()
-                        time_to_next = acquire_start + delta_time - current_time
-                        remaining_time = time_to_next + delta_time*(total_imgs-frame-1) + acquire_time
-                        disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
-                        # number of images taken so far
-                        disp_draw.text(BIG4_2, "%04d" % (frame), font=font_large)
-                        # seconds until next image
-                        disp_draw.text(BIG4_1,"%04d" % (time_to_next), font=font_large)
-                        # total time remaining for time lapse
-                        disp_draw.text(TIME_2, time.strftime("%H:%M:%S", time.gmtime(remaining_time)), font=font_small)
-                        # total images to be taken
-                        disp_draw.text(TOT_IMG, "%04d" % (total_imgs))
-                        # write to display
-                        camera.disp_image(disp_image)
-                        # sleep a bit to free up CPU
-                        time.sleep(0.250)
-                                            
+                for image_count in xrange(1,total_imgs+1):
+                    # Take the image
                     print "Taking next image."
                     disp_big_msg(" TAKE ")
+                    filename = timelapse_name+"_%04d.jpg" % image_count
                     acquire_start = time.time()
+                    camera.capture(filename)
+                    acquire_finish = time.time()
+                    acquire_time = acquire_finish - acquire_start
+                    # Pause
+                    print "[{0}/{1}]:{2}  DT={3}".format(image_count,total_imgs,filename,acquire_time)
+                    if (image_count<total_imgs):
+                        print "Waiting for time to lapse."
+                        keep_waiting = True
+                        while keep_waiting:
+                            time.sleep(0.250)
+                            current_time = time.time()
+                            time_to_next = acquire_start + delta_time - current_time
+                            time_remaining = time_to_next + delta_time*(total_imgs-image_count-1) + acquire_time
+                            disp_show_status(time_to_next, image_count, time_remaining)
+                            if (time_to_next <= 0 ):
+                                keep_waiting = False
+                                 
             finally:
-                # camera.get_camera().stop_preview()
                 disp_big_msg(" DONE ")
                 time.sleep(1)
             print "Time lapse complete, saved to {0}.".format(timelapse_name)
