@@ -28,7 +28,7 @@ LCD_DC              =   23      # Nokia LCD display D/C
 LCD_RST             =   24      # Nokia LCD displat Reset
 LCD_SPI_PORT        =   0       # Hardware SPI port to use
 LCD_SPI_DEVICE      =   0       # Hardware SPI device (determines chip select pin used)
-LCD_LED             =   4       # LCD LED enable pin (HIGH=ON, LOW=OFF)
+LCD_LED             =   22      # LCD LED enable pin (HIGH=ON, LOW=OFF)
 
 class Campi():
         
