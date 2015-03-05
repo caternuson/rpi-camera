@@ -17,11 +17,11 @@ import Adafruit_Nokia_LCD as LCD
 import Adafruit_GPIO.SPI as SPI
 
 # Control button locations on GPIO
-BTN_1               =   25
-BTN_2               =   18
-BTN_3               =   17
-BTN_4               =   27
-BTN_5               =   22
+BTN_1               =   19
+BTN_2               =   16
+BTN_3               =   26
+BTN_4               =   20
+BTN_5               =   21
 
 # Nokia LCD display control on GPIO
 LCD_DC              =   23      # Nokia LCD display D/C
