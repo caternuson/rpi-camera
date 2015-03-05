@@ -2,9 +2,10 @@ rpi-camera
 ==========
 
 Python code for Raspberry Pi based time lapse camera.
-* rpi_camera.py - contains class for interfacing to hardware
+* campi.py - contains class for interfacing to hardware
 * camera_basic.py - basic example of using camera
 * camera_timelapse.py - uses camera to take time lapses
+* rpi_camera.py - *OLD* version of camera class, repaced with campi.py
 
 Hardware:
 * Raspberry Pi Model A
