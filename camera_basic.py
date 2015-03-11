@@ -37,9 +37,9 @@ total_time = delta_time * (total_imgs-1)    # total time in seconds
 #--------------------------------------------------------------------
 # Show stats and prompt for start
 print "{0} images every {1} seconds.".format(total_imgs, delta_time)
-print "Total time to acquire {0}".format(time.strftime("%H:%M:%S",time.gmtime(total_time)))
-print "Current time {0}".format(time.strftime("%H:%M:%S",time.gmtime(time.time())))
-print "Finish time {0}".format(time.strftime("%H:%M:%S",time.gmtime(time.time()+total_time)))
+print "Total time to acquire {0}".format(time.strftime("%H:%M:%S",time.localtime(total_time)))
+print "Current time {0}".format(time.strftime("%H:%M:%S",time.localtime(time.time())))
+print "Finish time {0}".format(time.strftime("%H:%M:%S",time.localtime(time.time()+total_time)))
 s = raw_input("Continue? ")
 if (s.upper() != 'Y'):
     exit()
@@ -52,7 +52,7 @@ os.chdir(timelapse_name)
 # Slight pause before first image
 time.sleep(1)
 
-print "{0} starting".format(time.strftime("%H:%M:%S",time.gmtime(time.time())))
+print "{0} starting".format(time.strftime("%H:%M:%S",time.localtime()))
 
 # Mark the time                  
 start_time  = time.time()
