@@ -11,52 +11,86 @@
 # 2014-10-29
 # Carter Nelson
 #===========================================================================
-import picamera
+import campi
 import time
+import datetime
 import os
 
-# Hardwire some values
-T   = 60         # total time in seconds
-dt  = 10         # delta time in seconds
-N   = T /dt      # total number of frames
+# Root directory where app was launched
+root_dir = os.getcwd()
 
-print "{0} images every {1} seconds.".format(N, dt)
-print "Total time to acquire {0}".format(time.strftime("%H:%M:%S",time.gmtime(T)))
-s = raw_input("Continue? ")
-if (s.upper() != 'Y'):
-    exit()
-    
-tl_name = time.strftime("%Y%m%d_%H%M",time.localtime())
-os.mkdir(tl_name)
-os.chdir(tl_name)
+# Camera setup
+camera = campi.Campi()
+resolution = (1920, 1080)                   # resolution of images
+jpeg_quality = 100                          # jpeg image quality
+iso = 100                                   # ISO 100, 200, 320, 400, 500, 640, 800
+shutter_speed = 4000                        # shutter speed in microseconds
+camera.set_cam_config(resolution=resolution,quality=jpeg_quality)
 
-def get_time_str():
-    return time.strftime("%H:%M:%S", time.gmtime(time.time()))
+# Default time lapse config
+delta_time = 15                             # delta time in seconds
+total_imgs = 600                          # total number of images
+total_time = delta_time * (total_imgs-1)    # total time in seconds
 
 #--------------------------------------------------------------------
 # MAIN 
 #--------------------------------------------------------------------
-print "{0} starting".format(get_time_str())
+# Show stats and prompt for start
+print "{0} images every {1} seconds.".format(total_imgs, delta_time)
+print "Total time to acquire {0}".format(time.strftime("%H:%M:%S",time.gmtime(total_time)))
+print "Current time {0}".format(time.strftime("%H:%M:%S",time.gmtime(time.time())))
+print "Finish time {0}".format(time.strftime("%H:%M:%S",time.gmtime(time.time()+total_time)))
+s = raw_input("Continue? ")
+if (s.upper() != 'Y'):
+    exit()
 
-with picamera.PiCamera() as camera:
-    print "{0} setting camera config".format(get_time_str())
-    camera.resolution = (2592,1944)   # 2592 x 1944 max
-    camera.vflip = True
-    camera.hflip = True
-    #camera.start_preview()
-    #time.sleep(2)
-    try:
-        print "{0} starting loop".format(get_time_str())
-        for i, filename in enumerate(camera.capture_continuous(tl_name+'_{counter:04d}.jpg',quality=100)):
-            frame = i+1
-            print "{3} [{0}/{1}]:{2}".format(frame,N,filename,get_time_str()) 
-            if (frame==N):
-                break
-            print "{0} sleeping".format(get_time_str())
-            time.sleep(dt)
-            print "{0} taking next image".format(get_time_str())
-    finally:
-        pass
-        #camera.stop_preview()
+# Create directory for files and go there
+timelapse_name = time.strftime("%Y%m%d_%H%M",time.localtime())
+os.mkdir(timelapse_name)
+os.chdir(timelapse_name)
 
-print "{0} done".format(get_time_str())
+# Slight pause before first image
+time.sleep(1)
+
+print "{0} starting".format(time.strftime("%H:%M:%S",time.gmtime(time.time())))
+
+# Mark the time                  
+start_time  = time.time()
+finish_time = start_time + total_time
+time_remaining = finish_time - start_time
+
+# Try block for image capture
+try:                
+    # Main time lapse loop
+    for image_count in xrange(1,total_imgs+1):
+        # Take the image
+        #print "Taking next image."
+        filename = timelapse_name+"_%04d.jpg" % image_count
+        acquire_start = time.time()
+        camera.capture(filename)
+        acquire_finish = time.time()
+        acquire_time = acquire_finish - acquire_start
+        # Pause
+        print "[{0}/{1}]:{2}  remaining={3}".format(
+            image_count,
+            total_imgs,
+            filename,
+            datetime.timedelta(seconds=time_remaining)
+            )
+        if (image_count<total_imgs):
+            #print "Waiting for time to lapse."
+            keep_waiting = True
+            while keep_waiting:
+                time.sleep(0.250)
+                current_time = time.time()
+                time_to_next = acquire_start + delta_time - current_time
+                time_remaining = time_to_next + delta_time*(total_imgs-image_count-1) + acquire_time
+                if (time_to_next <= 0 ):
+                    keep_waiting = False
+                     
+finally:
+    time.sleep(1)
+    
+print "Time lapse complete, saved to {0}.".format(timelapse_name)
+os.chdir(root_dir)
+            
