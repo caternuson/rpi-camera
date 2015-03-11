@@ -38,7 +38,7 @@ class Campi():
         self._shutter_speed = 0         # 0(auto), value in microseconds
         self._brightness = 50           # 0 - 100
         self._awb_mode = 'auto'         # auto white balance mode (see doc)
-        self._hvflip = (False, False)   # horizontal/vertical flip
+        self._hvflip = (True, True)     # horizontal/vertical flip
         self._quality = 100             # 0 - 100,  applies only to JPGs
         
         self._disp = LCD.PCD8544(LCD_DC,
