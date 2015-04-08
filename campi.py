@@ -74,7 +74,14 @@ class Campi():
             camera.hflip = self._hvflip[0]
             camera.vflip = self._hvflip[1]
             camera.capture(filename, quality=self._quality)
-            
+     
+    def capture_stream(self, ios):
+        with picamera.PiCamera() as camera:
+            camera.hflip = True
+            camera.vflip = True 
+            camera.start_preview()
+            camera.capture(ios, 'jpeg', use_video_port=True, resize=(400,225))
+                    
     def set_cam_config(self,    resolution = None,
                                 iso = None,
                                 shutter_speed = None,
@@ -97,7 +104,7 @@ class Campi():
             self.hvflip = hvflip
         if not quality==None:
             self._quality = quality
-    
+
     
     #---------------------------------------------------------------
     # Nokia LCD Display functions

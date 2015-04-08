@@ -19,6 +19,8 @@ import tornado.websocket
 import tornado.web
 
 import time
+import cStringIO as io
+import base64
 import Image
 import ImageDraw
 import ImageFont
@@ -40,15 +42,60 @@ total_time = delta_time * (total_imgs-1)    # total time in seconds
 #-------------------------------------------------------------------------
 # Tornado Server Setup
 #-------------------------------------------------------------------------
+# camera preview
+class CameraPreviewHandler(tornado.web.RequestHandler):
+    def get(self):
+        print "GET Request from {}".format(self.request.remote_ip)
+        self.render("camera_preview.html")
+        
+class CameraPreviewWebSocket(tornado.websocket.WebSocketHandler):
+    
+    def initialize(self):
+        self.camera_loop = None
+        
+    def loop(self):
+        iostream = io.StringIO()
+        camera.capture_stream(iostream)
+        try:
+            self.write_message(base64.b64encode(iostream.getvalue()))
+        except tornado.websocket.WebSocketClosedError:
+            self.__stopStream__()
+
+        
+    def open(self):
+        self.__startStream__()
+    
+    def on_close(self):
+        self.__stopStream__()
+    
+    def __startStream__(self):
+        self.camera_loop = tornado.ioloop.PeriodicCallback(self.loop, 500)
+        self.camera_loop.start()
+    
+    def __stopStream__(self):
+        if (self.camera_loop != None):
+            self.camera_loop.stop()
+            self.camera_loop = None
+        
 # this will handle HTTP requests
 class MyRequestHandler(tornado.web.RequestHandler):
     def get(self):
         print "GET Request from {}".format(self.request.remote_ip)
         self.render("camera.html")
+        
+    def post(self):
+        print "POST Request from {}".format(self.request.remote_ip)
+        DT = self.get_argument('delta_time')
+        N = self.get_argument('total_imgs')
+        self.write("DT=%s  N=%s" % (DT, N))
+        #self.set_header("Content-Type", "text/plain")
+        #self.write("You wrote " + self.get_body_argument("message"))        
 
 # separate HTTP and WebSockets based on URL
 handlers = ([
     (r"/camera", MyRequestHandler),
+    (r"/camera_preview", CameraPreviewHandler),
+    (r"/camera_ws", CameraPreviewWebSocket)
 ])
 
 #===========================

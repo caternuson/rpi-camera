@@ -23,13 +23,17 @@ root_dir = os.getcwd()
 camera = campi.Campi()
 resolution = (1920, 1080)                   # resolution of images
 jpeg_quality = 100                          # jpeg image quality
-iso = 100                                   # ISO 100, 200, 320, 400, 500, 640, 800
-shutter_speed = 4000                        # shutter speed in microseconds
-camera.set_cam_config(resolution=resolution,quality=jpeg_quality)
+iso = 400                                   # ISO 100, 200, 320, 400, 500, 640, 800
+shutter_speed = 16000                       # shutter speed in microseconds
+camera.set_cam_config(
+    resolution=resolution,
+    quality=jpeg_quality,
+    iso=iso,
+    shutter_speed=shutter_speed)
 
 # Default time lapse config
-delta_time = 15                             # delta time in seconds
-total_imgs = 600                          # total number of images
+delta_time = 60                             # delta time in seconds
+total_imgs = 540                            # total number of images
 total_time = delta_time * (total_imgs-1)    # total time in seconds
 
 #--------------------------------------------------------------------
@@ -37,7 +41,7 @@ total_time = delta_time * (total_imgs-1)    # total time in seconds
 #--------------------------------------------------------------------
 # Show stats and prompt for start
 print "{0} images every {1} seconds.".format(total_imgs, delta_time)
-print "Total time to acquire {0}".format(time.strftime("%H:%M:%S",time.localtime(total_time)))
+print "Total time to acquire {0}".format(time.strftime("%H:%M:%S",time.gmtime(total_time)))
 print "Current time {0}".format(time.strftime("%H:%M:%S",time.localtime(time.time())))
 print "Finish time {0}".format(time.strftime("%H:%M:%S",time.localtime(time.time()+total_time)))
 s = raw_input("Continue? ")
