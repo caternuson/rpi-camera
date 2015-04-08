@@ -1,0 +1,31 @@
+<html>
+<head>
+<title>Camera Preview</title>
+</head>
+<body>
+<center>
+    <img id="preview" width=400 height=225/>
+</center>    
+    
+<script>
+     // call back when browser window is closed
+    window.onclose = ws_close;
+
+    // instatiate and open websocket
+    var ws = new WebSocket("ws://"+location.host+"/camera_ws");
+    
+    // close the socket
+    function ws_close() {
+        if (ws.readyState == WebSocket.OPEN) {
+            ws.close()
+        }
+    }
+
+    // handler for receiving messages
+    ws.onmessage = function (messageEvent) {
+        preview.src = "data:image/jpeg;base64," + messageEvent.data;
+    }
+</script>
+    
+</body>
+</html>
