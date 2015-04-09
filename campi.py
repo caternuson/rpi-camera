@@ -91,7 +91,7 @@ class Campi():
         with picamera.PiCamera() as camera:
             camera.hflip = True
             camera.vflip = True 
-            camera.start_preview()
+            #camera.start_preview()
             camera.capture(ios, 'jpeg', use_video_port=True, resize=(400,225))
                     
     def set_cam_config(self,    resolution = None,
@@ -140,8 +140,8 @@ class Campi():
     
     def disp_msg(self, msg, font=font_small):
         (fw,fh) = font.getsize(" ")  # font width and height
-        cx = LCD.LCDWIDTH / fw       # characters per line
-        cy = LCD.LCDHEIGHT / fh      # number of lines
+        cx = LCD.LCDWIDTH / fw       # max characters per line
+        cy = LCD.LCDHEIGHT / fh      # max number of lines
 
         lines = [ msg[i:i+cx] for i in range(0, len(msg), cx) ]
         
