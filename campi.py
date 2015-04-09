@@ -16,6 +16,10 @@ import RPi.GPIO as GPIO
 import Adafruit_Nokia_LCD as LCD
 import Adafruit_GPIO.SPI as SPI
 
+import Image
+import ImageDraw
+import ImageFont
+
 # Control button locations on GPIO
 BTN_1               =   19
 BTN_2               =   16
@@ -29,6 +33,14 @@ LCD_RST             =   24      # Nokia LCD displat Reset
 LCD_SPI_PORT        =   0       # Hardware SPI port to use
 LCD_SPI_DEVICE      =   0       # Hardware SPI device (determines chip select pin used)
 LCD_LED             =   22      # LCD LED enable pin (HIGH=ON, LOW=OFF)
+
+# Load fonts
+font_small = ImageFont.load_default()
+
+# Image draw buffer for writing to LCD display
+WHOLE_SCREEN    = ((0,0),(LCD.LCDWIDTH, LCD.LCDHEIGHT))
+disp_image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
+disp_draw  = ImageDraw.Draw(disp_image)
 
 class Campi():
         
@@ -125,6 +137,20 @@ class Campi():
         
     def get_lcd_size(self):
         return (LCD.LCDWIDTH, LCD.LCDHEIGHT)
+    
+    def disp_msg(self, msg, font=font_small):
+        (fw,fh) = font.getsize(" ")  # font width and height
+        cx = LCD.LCDWIDTH / fw       # characters per line
+        cy = LCD.LCDHEIGHT / fh      # number of lines
+
+        lines = [ msg[i:i+cx] for i in range(0, len(msg), cx) ]
+        
+        disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+        y = 0
+        for line in lines:
+            disp_draw.text((0,y), line, font=font_small)
+            y += fh
+        self.disp_image(disp_image)
                 
     #---------------------------------------------------------------
     # Button functions
