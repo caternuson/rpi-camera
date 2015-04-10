@@ -103,7 +103,20 @@ def start_timelapse():
 #-------------------------------------------------------------------------
 # Tornado Server Setup
 #-------------------------------------------------------------------------
-# camera captuer
+# camera shut down
+class CameraShutDownHandler(tornado.web.RequestHandler):
+    def get(self, ):
+        camera.disp_msg("BYE BYE")
+        print "BYE BYE"
+        self.write( '<html><body>'
+                    '<center><h1>BYE BYE</h1></center>'
+                    '</body></html>'
+                  )
+        time.sleep(5)
+        os.system("sudo halt") 
+        exit()
+
+# camera capture
 class CameraCaptureHandler(tornado.web.RequestHandler):
     def get(self, ):
         file_name = 'test.jpg'
@@ -201,7 +214,8 @@ handlers = ([
     (r"/camera_timelapse",  CameraTimeLapseHandler),
     (r"/camera_preview",    CameraPreviewHandler),
     (r"/camera_capture",    CameraCaptureHandler),
-    (r"/camera_ws",         CameraPreviewWebSocket)
+    (r"/camera_ws",         CameraPreviewWebSocket),
+    (r"/camera_shutdown",   CameraShutDownHandler)
 ])
 
 #===========================
@@ -216,3 +230,4 @@ server.listen(PORT)
 print "start ioloop..."
 tornado.ioloop.IOLoop.instance().start()
 print "i guess we're done then."
+
