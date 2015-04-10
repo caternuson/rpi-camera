@@ -1,0 +1,75 @@
+<html>
+<head>
+<title>Camera Control</title>
+</head>
+<body>
+
+<form name="camera_setup" id="camera_setup" method="GET">
+    delta_time<input type="text" name="delta_time"/><br/>
+    total_imgs<input type="text" name="total_imgs"/><br/>
+    ISO=
+    <select name="ISO" id="ISO">
+        <option value="0">AUTO</option>
+        <option value="100">100</option>
+        <option value="200">200</option>
+        <option value="320">320</option>
+        <option value="400">400</option>
+        <option value="500">500</option>
+        <option value="640">640</option>
+        <option value="800">800</option>
+    </select>
+    Shutter=
+    <select name="shutter" id="shutter">
+        <option value="0">AUTO</option>
+        <option value="2000000">2'</option>
+        <option value="1000000">1'</option>
+        <option value="500000">2</option>
+        <option value="250000">4</option>
+        <option value="125000">8</option>
+        <option value="62500">16</option>
+        <option value="31250">32</option>
+        <option value="15625">64</option>
+        <option value="7813">128</option>
+        <option value="3906">256</option>
+        <option value="1953">512</option>
+        <option value="978">1024</option>
+    </select>
+    <br/>
+    <input type="submit" value="Submit"/>
+</form>
+
+<script>
+var QueryString = function () {
+  // This function is anonymous, is executed immediately and 
+  // the return value is assigned to QueryString!
+  var query_string = {};
+  var query = window.location.search.substring(1);
+  var vars = query.split("&");
+  for (var i=0;i<vars.length;i++) {
+    var pair = vars[i].split("=");
+        // If first entry with this name
+    if (typeof query_string[pair[0]] === "undefined") {
+      query_string[pair[0]] = pair[1];
+        // If second entry with this name
+    } else if (typeof query_string[pair[0]] === "string") {
+      var arr = [ query_string[pair[0]], pair[1] ];
+      query_string[pair[0]] = arr;
+        // If third or later entry with this name
+    } else {
+      query_string[pair[0]].push(pair[1]);
+    }
+  } 
+    return query_string;
+} ();
+
+$(function() {
+    $("#delta_time").val("200");
+    //$("#delta_time").val(QueryString.delta_time);
+    $("#total_imgs").val(QueryString.total_imgs);
+    $("#ISO").val(QueryString.ISO);
+    $("#shutter").val(QueryString.shutter);
+});
+
+</script>    
+</body>
+</html>

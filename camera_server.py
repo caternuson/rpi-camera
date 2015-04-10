@@ -43,6 +43,9 @@ delta_time = 10                             # delta time in seconds
 total_imgs = 2                           # total number of images
 total_time = delta_time * (total_imgs-1)    # total time in seconds
 
+ISO = 400
+shutter = 0
+
 def start_timelapse():
     total_time = delta_time * (total_imgs-1)
     print "delta_time=%g" % delta_time
@@ -139,16 +142,28 @@ class CameraPreviewWebSocket(tornado.websocket.WebSocketHandler):
 # camera set up
 class CameraSetUpHandler(tornado.web.RequestHandler):
     def get(self):
+        global delta_time
+        global total_imgs
+        global ISO
+        global shutter
         print "GET Request from {}".format(self.request.remote_ip)
-        self.render("camera.html")
+        delta_time = int(self.get_argument("delta_time", default=delta_time))
+        total_imgs = int(self.get_argument("total_imgs", default=total_imgs))
+        ISO = int(self.get_argument("ISO", default=ISO))
+        shutter = int(self.get_argument("shutter", default=shutter))
+        camera.disp_msg("DT=%g  N=%g ISO=%g s=%g" % (delta_time, total_imgs, ISO, shutter))
+        URL  = "camera_setup.html"
+        #URL += "?delta_time=%g" % delta_time
+        #URL += "&total_imgs=%g" % total_imgs
+        #URL += "&ISO=%g" % ISO
+        #URL += "&shutter=%g" % shutter
+        self.render(URL,delta_time=20,total_imgs=3,ISO=400,shutter=125000)
         
     def post(self):
         print "POST Request from {}".format(self.request.remote_ip)
-        delta_time = int(self.get_argument('delta_time'))
-        total_imgs = int(self.get_argument('total_imgs'))
-        camera.disp_msg("DT=%s  N=%s" % (delta_time, total_imgs))
-        self.render("camera.html")
-
+        #delta_time = int(self.get_argument('delta_time'))
+        #total_imgs = int(self.get_argument('total_imgs'))
+        #camera.disp_msg("DT=%s  N=%s" % (delta_time, total_imgs))
         #self.write("DT=%s  N=%s" % (DT, N))
         #self.set_header("Content-Type", "text/plain")
         #self.write("You wrote " + self.get_body_argument("message"))
