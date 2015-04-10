@@ -78,20 +78,12 @@ class Campi():
     #---------------------------------------------------------------
     def capture(self, filename):
         with picamera.PiCamera() as camera:
-            camera.resolution = self._resolution
-            camera.iso =  self._iso
-            camera.shutter_speed = self._shutter_speed
-            camera.brightness = self._brightness
-            camera.awb_mode = self._awb_mode
-            camera.hflip = self._hvflip[0]
-            camera.vflip = self._hvflip[1]
+            camera = self.__update_camera__(cam=camera)
             camera.capture(filename, quality=self._quality)
      
     def capture_stream(self, ios):
         with picamera.PiCamera() as camera:
-            camera.hflip = True
-            camera.vflip = True 
-            #camera.start_preview()
+            camera = self.__update_camera__(cam=camera)
             camera.capture(ios, 'jpeg', use_video_port=True, resize=(400,225))
                     
     def set_cam_config(self,    resolution = None,
@@ -105,18 +97,29 @@ class Campi():
         if not resolution==None:
             self._resolution = resolution
         if not iso==None:
-            self.iso = iso        
+            self._iso = iso        
         if not shutter_speed==None:
-            self.shutter_speed = shutter_speed
+            self._shutter_speed = shutter_speed
         if not brightness==None:
-            self.brightness = brightness
+            self._brightness = brightness
         if not awb_mode==None:
-            self.awb_mode = awb_mode
+            self._awb_mode = awb_mode
         if not hvflip==None:
-            self.hvflip = hvflip
+            self._hvflip = hvflip
         if not quality==None:
             self._quality = quality
 
+    def __update_camera__(self, cam=None):
+        if cam==None:
+            return
+        cam.resolution = self._resolution
+        cam.iso =  self._iso
+        cam.shutter_speed = self._shutter_speed
+        cam.brightness = self._brightness
+        cam.awb_mode = self._awb_mode
+        cam.hflip = self._hvflip[0]
+        cam.vflip = self._hvflip[1]
+        return cam
     
     #---------------------------------------------------------------
     # Nokia LCD Display functions

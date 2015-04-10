@@ -3,12 +3,11 @@
 <title>Camera Control</title>
 </head>
 <body>
-
 <form name="camera_setup" id="camera_setup" method="GET">
-    delta_time<input type="text" name="delta_time"/><br/>
-    total_imgs<input type="text" name="total_imgs"/><br/>
+    delta_time<input type="text" name="D"/><br/>
+    total_imgs<input type="text" name="N"/><br/>
     ISO=
-    <select name="ISO" id="ISO">
+    <select name="I">
         <option value="0">AUTO</option>
         <option value="100">100</option>
         <option value="200">200</option>
@@ -19,7 +18,7 @@
         <option value="800">800</option>
     </select>
     Shutter=
-    <select name="shutter" id="shutter">
+    <select name="S">
         <option value="0">AUTO</option>
         <option value="2000000">2'</option>
         <option value="1000000">1'</option>
@@ -37,6 +36,10 @@
     <br/>
     <input type="submit" value="Submit"/>
 </form>
+<br/><br/>
+<h1><a href="camera_capture">CAPTURE</a></h1>
+<h1><a href="camera_preview">PREVIEW</a></h1>
+<h1><a href="camera_timelapse">START</a></h1>
 
 <script>
 var QueryString = function () {
@@ -62,14 +65,15 @@ var QueryString = function () {
     return query_string;
 } ();
 
-$(function() {
-    $("#delta_time").val("200");
-    //$("#delta_time").val(QueryString.delta_time);
-    $("#total_imgs").val(QueryString.total_imgs);
-    $("#ISO").val(QueryString.ISO);
-    $("#shutter").val(QueryString.shutter);
-});
+window.onload = update_forms();
 
-</script>    
+function update_forms() {
+    document.forms['camera_setup'].elements["D"].value = QueryString.D;
+    document.forms['camera_setup'].elements["N"].value = QueryString.N;
+    document.forms['camera_setup'].elements["I"].value = QueryString.I;
+    document.forms['camera_setup'].elements["S"].value = QueryString.S;
+}
+</script>
+
 </body>
 </html>

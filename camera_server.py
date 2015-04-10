@@ -103,6 +103,22 @@ def start_timelapse():
 #-------------------------------------------------------------------------
 # Tornado Server Setup
 #-------------------------------------------------------------------------
+# camera captuer
+class CameraCaptureHandler(tornado.web.RequestHandler):
+    def get(self, ):
+        file_name = 'test.jpg'
+        camera.capture(file_name)
+        buf_size = 4096
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Disposition', 'attachment; filename=' + file_name)
+        with open(file_name, 'r') as f:
+            while True:
+                data = f.read(buf_size)
+                if not data:
+                    break
+                self.write(data)
+        self.finish()
+        
 # camera preview
 class CameraPreviewHandler(tornado.web.RequestHandler):
     def get(self):
@@ -146,40 +162,45 @@ class CameraSetUpHandler(tornado.web.RequestHandler):
         global total_imgs
         global ISO
         global shutter
+        global camera
         print "GET Request from {}".format(self.request.remote_ip)
-        delta_time = int(self.get_argument("delta_time", default=delta_time))
-        total_imgs = int(self.get_argument("total_imgs", default=total_imgs))
-        ISO = int(self.get_argument("ISO", default=ISO))
-        shutter = int(self.get_argument("shutter", default=shutter))
+        delta_time  = int(self.get_argument("D", delta_time))
+        total_imgs  = int(self.get_argument("N", total_imgs))
+        ISO         = int(self.get_argument("I", ISO))
+        shutter     = int(self.get_argument("S", shutter))
+        camera.set_cam_config(iso=ISO, shutter_speed=shutter)
         camera.disp_msg("DT=%g  N=%g ISO=%g s=%g" % (delta_time, total_imgs, ISO, shutter))
-        URL  = "camera_setup.html"
-        #URL += "?delta_time=%g" % delta_time
-        #URL += "&total_imgs=%g" % total_imgs
-        #URL += "&ISO=%g" % ISO
-        #URL += "&shutter=%g" % shutter
-        self.render(URL,delta_time=20,total_imgs=3,ISO=400,shutter=125000)
+        self.render("camera_setup.html")
         
     def post(self):
         print "POST Request from {}".format(self.request.remote_ip)
-        #delta_time = int(self.get_argument('delta_time'))
-        #total_imgs = int(self.get_argument('total_imgs'))
-        #camera.disp_msg("DT=%s  N=%s" % (delta_time, total_imgs))
-        #self.write("DT=%s  N=%s" % (DT, N))
-        #self.set_header("Content-Type", "text/plain")
-        #self.write("You wrote " + self.get_body_argument("message"))
+        self.write("there is no post handler")
         
 # camera time lapse
 class CameraTimeLapseHandler(tornado.web.RequestHandler):
     def get(self):
-        self.write("OK, HERE WE GO!!!")
-        self.write("DT=%s  N=%s" % (delta_time, total_imgs))
+        global delta_time
+        global total_imgs
+        global ISO
+        global shutter
+        print "GET Request from {}".format(self.request.remote_ip)
+        camera.disp_msg("DT=%g  N=%g ISO=%g s=%g" % (delta_time, total_imgs, ISO, shutter))
+        self.write('<html><body>'
+                   'DT=%g  N=%g ISO=%g s=%g' % (delta_time, total_imgs, ISO, shutter) + '<br/>'
+                   '<form method="POST"><input type="submit" value="GO"/>'
+                   '</body></html>')
+       
+    def post(self):
+        self.write('time lapse started...')
         start_timelapse()
+        self.write('DONE.')
 
 # separate HTTP and WebSockets based on URL
 handlers = ([
     (r"/camera_setup",      CameraSetUpHandler),
     (r"/camera_timelapse",  CameraTimeLapseHandler),
     (r"/camera_preview",    CameraPreviewHandler),
+    (r"/camera_capture",    CameraCaptureHandler),
     (r"/camera_ws",         CameraPreviewWebSocket)
 ])
 
