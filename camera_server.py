@@ -46,8 +46,92 @@ total_time = delta_time * (total_imgs-1)    # total time in seconds
 ISO = 400
 shutter = 0
 
+#-------------------------------------------------------------------------
+# LCD display functions
+#-------------------------------------------------------------------------
+# Load fonts
+font_small = ImageFont.load_default()
+font_large = ImageFont.truetype("5Identification-Mono.ttf",12)
+
+# Image draw buffer for writing to LCD display
+disp_image = Image.new('1', camera.get_lcd_size())
+disp_draw  = ImageDraw.Draw(disp_image)
+
+# Display locations
+WHOLE_SCREEN    = campi.WHOLE_SCREEN
+BIG4_1          = (31,0)
+BIG4_2          = (31,18)
+BIG_MSG         = (0,12)         
+BIG4_1_LABEL    = (4,5)
+BIG4_2_LABEL    = (4,23)
+TIME_1          = (4,36)
+TIME_2          = (2,36)
+TOT_IMG         = (60,36)
+OK_CONFIRM      = (4,14)
+PROG_BAR_H      = 31
+PROG_BAR_W      = 14
+PROG_BAR_LOC    = (8,4)
+PROG_BAR_BOX    = (PROG_BAR_LOC,(PROG_BAR_LOC[0]+PROG_BAR_W,PROG_BAR_LOC[1]+PROG_BAR_H))
+Y1              = 0
+Y2              = Y1 + font_small.getsize(" ")[1]
+Y3              = Y2 + (Y2-Y1)
+Y4              = Y3 + (Y2-Y1)
+Y5              = Y4 + (Y2-Y1)
+
+def disp_big_msg(msg, location=BIG_MSG):
+    # Display a message using large font
+    disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+    disp_draw.text(location, msg, font=font_large)
+    camera.disp_image(disp_image)
+
+def disp_show_config():
+    # Display current time lapse config info
+    disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)   
+    disp_draw.text(BIG4_1_LABEL," d=", font=font_small)
+    disp_draw.text(BIG4_1, "%04d" % (delta_time), font=font_large)
+    disp_draw.text(BIG4_2_LABEL, " N=", font=font_small)
+    disp_draw.text(BIG4_2, "%04d" % (total_imgs), font=font_large)   
+    disp_draw.text(TIME_1, time.strftime(" T=  %H:%M:%S", time.gmtime(total_time)), font=font_small)
+    camera.disp_image(disp_image)
+    
+def disp_show_summary():
+    # Display summary of time lapse config info
+    disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+    disp_draw.text(BIG4_1,"%04d" % (delta_time), font=font_large)
+    disp_draw.text(BIG4_2, "%04d" % (total_imgs), font=font_large)       
+    disp_draw.text(TIME_1, time.strftime("     %H:%M:%S", time.gmtime(total_time)), font=font_small)
+    disp_draw.text(OK_CONFIRM,"OK?", font=font_small)
+    camera.disp_image(disp_image)
+    
+def disp_show_summary2():
+    # Display summary of time lapse and camera config
+    disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+    disp_draw.text((0,Y1),"del_tim=%04d" % (delta_time), font=font_small)
+    disp_draw.text((0,Y2),"tot_imgs=%04d" % (total_imgs), font=font_small)
+    disp_draw.text((0,Y3),"ISO=%g" % (camera._iso), font=font_small)
+    disp_draw.text((0,Y4),"s=%g" % (camera._shutter_speed) , font=font_small)
+    camera.disp_image(disp_image)
+    
+def disp_show_status(time_to_next, image_count, time_remaining):
+    disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+    disp_draw.rectangle(PROG_BAR_BOX, outline=0, fill=255)
+    #progress = int(float(PROG_BAR_H) * ( float(image_count)/float(total_imgs)))
+    progress = int(float(PROG_BAR_H) * ((total_time-time_remaining)/total_time))
+    PROG_BAR_FILL = ((PROG_BAR_LOC[0], PROG_BAR_LOC[1]+PROG_BAR_H-progress),
+                    (PROG_BAR_LOC[0]+PROG_BAR_W,PROG_BAR_LOC[1]+PROG_BAR_H))
+    disp_draw.rectangle(PROG_BAR_FILL, outline=0, fill=0)
+    disp_draw.text(BIG4_2, "%04d" % (image_count), font=font_large)
+    disp_draw.text(BIG4_1,"%04d" % (time_to_next), font=font_large)
+    disp_draw.text(TIME_2, time.strftime("%H:%M:%S", time.gmtime(time_remaining)), font=font_small)
+    disp_draw.text(TOT_IMG, "%04d" % (total_imgs), font=font_small)
+    camera.disp_image(disp_image) 
+
+#-------------------------------------------------------------------------
+# Time Lapse
+#-------------------------------------------------------------------------
 def start_timelapse():
     total_time = delta_time * (total_imgs-1)
+    print "---| Starting Time Lapse |-------------------"
     print "delta_time=%g" % delta_time
     print "total_imgs=%g" % total_imgs
     print "total_time=%g" % total_time
@@ -72,32 +156,30 @@ def start_timelapse():
         # Main time lapse loop
         for image_count in xrange(1,total_imgs+1):
             # Take the image
-            #print "Taking next image."
-            #disp_big_msg(" TAKE ")
+            disp_big_msg(" TAKE ")
             filename = timelapse_name+"_%04d.jpg" % image_count
-            acquire_start = time.time()
-            camera.disp_msg("[{0}/{1}]:{2}".format(image_count,total_imgs,filename))
+            print("[{0}/{1}]:{2}".format(image_count,total_imgs,filename))
+            acquire_start = time.time() 
             camera.capture(filename)
             acquire_finish = time.time()
             acquire_time = acquire_finish - acquire_start
             # Pause
             if (image_count<total_imgs):
-                # print "Waiting for time to lapse."
+                print "Waiting for time to lapse."
                 keep_waiting = True
                 while keep_waiting:
                     time.sleep(0.250)
                     current_time = time.time()
                     time_to_next = acquire_start + delta_time - current_time
                     time_remaining = time_to_next + delta_time*(total_imgs-image_count-1) + acquire_time
-                    #disp_show_status(time_to_next, image_count, time_remaining)
-                    camera.disp_msg("%g" % time_remaining)
+                    disp_show_status(time_to_next, image_count, time_remaining)
                     if (time_to_next <= 0 ):
                         keep_waiting = False                                 
     finally:
-        #disp_big_msg(" DONE ")
-        camera.disp_msg("DONE")
+        disp_big_msg(" DONE ")
         time.sleep(1)
-    #print "Time lapse complete, saved to {0}.".format(timelapse_name)
+    print "---| Done |----------------------------------"
+    print "Time lapse complete, saved to {0}.".format(timelapse_name)
     os.chdir(root_dir)
 
 #-------------------------------------------------------------------------
@@ -176,13 +258,16 @@ class CameraSetUpHandler(tornado.web.RequestHandler):
         global ISO
         global shutter
         global camera
+        global total_time
         print "GET Request from {}".format(self.request.remote_ip)
         delta_time  = int(self.get_argument("D", delta_time))
         total_imgs  = int(self.get_argument("N", total_imgs))
         ISO         = int(self.get_argument("I", ISO))
         shutter     = int(self.get_argument("S", shutter))
+        total_time  = delta_time * (total_imgs-1)
         camera.set_cam_config(iso=ISO, shutter_speed=shutter)
-        camera.disp_msg("DT=%g  N=%g ISO=%g s=%g" % (delta_time, total_imgs, ISO, shutter))
+        #camera.disp_msg("DT=%g  N=%g ISO=%g s=%g" % (delta_time, total_imgs, ISO, shutter))
+        disp_show_summary2()
         self.render("camera_setup.html")
         
     def post(self):
@@ -192,21 +277,32 @@ class CameraSetUpHandler(tornado.web.RequestHandler):
 # camera time lapse
 class CameraTimeLapseHandler(tornado.web.RequestHandler):
     def get(self):
-        global delta_time
-        global total_imgs
-        global ISO
-        global shutter
+        #global delta_time
+        #global total_imgs
+        #global ISO
+        #global shutter
         print "GET Request from {}".format(self.request.remote_ip)
-        camera.disp_msg("DT=%g  N=%g ISO=%g s=%g" % (delta_time, total_imgs, ISO, shutter))
+        #camera.disp_msg("DT=%g  N=%g ISO=%g s=%g" % (delta_time, total_imgs, ISO, shutter))
+        disp_show_summary()
         self.write('<html><body>'
-                   'DT=%g  N=%g ISO=%g s=%g' % (delta_time, total_imgs, ISO, shutter) + '<br/>'
+                   '<h1>'
+                   'delta_time=%g<br/>' % (delta_time) +
+                   'total_imgs=%g<br/>' % (total_imgs) +
+                   'total_time=%g<br/>' % (total_time) +
+                   'ISO=%g<br/>' % (camera._iso) +
+                   'shutter_speed=%g<br/>' % (camera._shutter_speed) +
+                   '</h1>'
                    '<form method="POST"><input type="submit" value="GO"/>'
                    '</body></html>')
        
     def post(self):
-        self.write('time lapse started...')
+        # for now, this is a blocking call
         start_timelapse()
-        self.write('DONE.')
+        self.write('<html><body>'
+                   '<h1>'
+                   'DONE.'
+                   '</h1>'
+                   '</body></html>')
 
 # separate HTTP and WebSockets based on URL
 handlers = ([
@@ -228,6 +324,7 @@ server = tornado.httpserver.HTTPServer(app)
 print "start listening on port {}...".format(PORT)
 server.listen(PORT)
 print "start ioloop..."
+camera.disp_msg("SERVER UP!")
 tornado.ioloop.IOLoop.instance().start()
 print "i guess we're done then."
 

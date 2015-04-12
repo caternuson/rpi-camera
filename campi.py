@@ -59,7 +59,7 @@ class Campi():
                                                 LCD_SPI_DEVICE,
                                                 max_speed_hz=4000000)
                                  )
-        self._disp.begin(contrast=60)
+        self._disp.begin(contrast=35)
         self._disp.clear()
         self._disp.display()
         
