@@ -1,79 +1,58 @@
 <html>
+    
 <head>
 <title>Camera Control</title>
+<style>
+body,input,option,select {
+    font-family: sans-serif;
+    font-size: 100px;
+    margin-bottom: 10px;
+    border-style: solid;
+    border-width: 10px;
+    border-color: black;
+}
+</style>
 </head>
-<body>
-<form name="camera_setup" id="camera_setup" method="GET">
-    delta_time<input type="text" name="D"/><br/>
-    total_imgs<input type="text" name="N"/><br/>
-    ISO=
-    <select name="I">
-        <option value="0">AUTO</option>
-        <option value="100">100</option>
-        <option value="200">200</option>
-        <option value="320">320</option>
-        <option value="400">400</option>
-        <option value="500">500</option>
-        <option value="640">640</option>
-        <option value="800">800</option>
+
+<body style='border-style: none;'>
+<center>
+<form style='border-style: none;' name='camera_setup' id='camera_setup' method='POST'>
+    D:<input type='number' name='D' style='width:30%' value='{{D}}' onclick='this.select()'/>
+    N:<input type='number' name='N' style='width:30%' value='{{N}}' onclick='this.select()'/><br/>
+    <select name='I' style='width:100%;text-align:center;'>
+        <option value='0'   {{I_0}}>AUTO</option>
+        <option value='100' {{I_1}}>100</option>
+        <option value='200' {{I_2}}>200</option>
+        <option value='320' {{I_3}}>320</option>
+        <option value='400' {{I_4}}>400</option>
+        <option value='500' {{I_5}}>500</option>
+        <option value='640' {{I_6}}>640</option>
+        <option value='800' {{I_7}}>800</option>
     </select>
-    Shutter=
-    <select name="S">
-        <option value="0">AUTO</option>
-        <option value="2000000">2'</option>
-        <option value="1000000">1'</option>
-        <option value="500000">2</option>
-        <option value="250000">4</option>
-        <option value="125000">8</option>
-        <option value="62500">16</option>
-        <option value="31250">32</option>
-        <option value="15625">64</option>
-        <option value="7813">128</option>
-        <option value="3906">256</option>
-        <option value="1953">512</option>
-        <option value="978">1024</option>
+    <select name='S' style='width:100%;text-align:center;'>
+        <option value='0'       {{S_0}}>AUTO</option>
+        <option value='2000000' {{S_1}}>2'</option>
+        <option value='1000000' {{S_2}}>1'</option>
+        <option value='500000'  {{S_3}}>1/2</option>
+        <option value='250000'  {{S_4}}>1/4</option>
+        <option value='125000'  {{S_5}}>1/8</option>
+        <option value='62500'   {{S_6}}>1/16</option>
+        <option value='31250'   {{S_7}}>1/32</option>
+        <option value='15625'   {{S_8}}>1/64</option>
+        <option value='7813'    {{S_9}}>1/128</option>
+        <option value='3906'    {{S_10}}>1/256</option>
+        <option value='1953'    {{S_11}}>1/512</option>
+        <option value='978'     {{S_12}}>1/1024</option>
     </select>
     <br/>
-    <input type="submit" value="Submit"/>
+    <input type='submit' name='BTN' value='UPDATE' style='width:100%;background:#aaddaa;'/>
+    <br/>
+    <input type='submit' name='BTN' value='CAPT' style='width:30%;background:#ccaadd;'/>
+    <input type='submit' name='BTN' value='PREV' style='width:30%;background:#aaccdd;'/>
+    <input type='submit' name='BTN' value='TLAP' style='width:30%;background:#aaccff;'/>
 </form>
-<br/><br/>
-<h1><a href="camera_capture">CAPTURE</a></h1>
-<h1><a href="camera_preview">PREVIEW</a></h1>
-<h1><a href="camera_timelapse">START</a></h1>
-
-<script>
-var QueryString = function () {
-  // This function is anonymous, is executed immediately and 
-  // the return value is assigned to QueryString!
-  var query_string = {};
-  var query = window.location.search.substring(1);
-  var vars = query.split("&");
-  for (var i=0;i<vars.length;i++) {
-    var pair = vars[i].split("=");
-        // If first entry with this name
-    if (typeof query_string[pair[0]] === "undefined") {
-      query_string[pair[0]] = pair[1];
-        // If second entry with this name
-    } else if (typeof query_string[pair[0]] === "string") {
-      var arr = [ query_string[pair[0]], pair[1] ];
-      query_string[pair[0]] = arr;
-        // If third or later entry with this name
-    } else {
-      query_string[pair[0]].push(pair[1]);
-    }
-  } 
-    return query_string;
-} ();
-
-window.onload = update_forms();
-
-function update_forms() {
-    document.forms['camera_setup'].elements["D"].value = QueryString.D;
-    document.forms['camera_setup'].elements["N"].value = QueryString.N;
-    document.forms['camera_setup'].elements["I"].value = QueryString.I;
-    document.forms['camera_setup'].elements["S"].value = QueryString.S;
-}
-</script>
-
+<div style='background:#ccccff;font-weight: bold;font-size: 80px;'>TOTAL TIME<br/>{{T}}</div>
+</center>
 </body>
+
 </html>

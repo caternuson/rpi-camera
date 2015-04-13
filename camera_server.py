@@ -124,7 +124,13 @@ def disp_show_status(time_to_next, image_count, time_remaining):
     disp_draw.text(BIG4_1,"%04d" % (time_to_next), font=font_large)
     disp_draw.text(TIME_2, time.strftime("%H:%M:%S", time.gmtime(time_remaining)), font=font_small)
     disp_draw.text(TOT_IMG, "%04d" % (total_imgs), font=font_small)
-    camera.disp_image(disp_image) 
+    camera.disp_image(disp_image)
+    
+def update_camera():
+    global ISO
+    global shutter
+    camera._iso = ISO
+    camera._shutter_speed = shutter
 
 #-------------------------------------------------------------------------
 # Time Lapse
@@ -202,6 +208,7 @@ class CameraShutDownHandler(tornado.web.RequestHandler):
 class CameraCaptureHandler(tornado.web.RequestHandler):
     def get(self, ):
         file_name = 'test.jpg'
+        update_camera()
         camera.capture(file_name)
         buf_size = 4096
         self.set_header('Content-Type', 'application/octet-stream')
@@ -233,8 +240,7 @@ class CameraPreviewWebSocket(tornado.websocket.WebSocketHandler):
             self.write_message(base64.b64encode(iostream.getvalue()))
         except tornado.websocket.WebSocketClosedError:
             self.__stopStream__()
-
-        
+       
     def open(self):
         self.__startStream__()
     
@@ -253,36 +259,75 @@ class CameraPreviewWebSocket(tornado.websocket.WebSocketHandler):
 # camera set up
 class CameraSetUpHandler(tornado.web.RequestHandler):
     def get(self):
+        print "GET Request from {}".format(self.request.remote_ip)
+        disp_show_summary()
+        kwargs = self.__build_kwargs__()
+        self.render('camera_setup.html', **kwargs)
+        
+    def post(self):
+        print "POST Request from {}".format(self.request.remote_ip)
+        self.__parse_args__()
+        update_camera()
+        BTN = self.get_argument('BTN')
+        if (BTN=='UPDATE'):
+            disp_show_summary()
+            kwargs = self.__build_kwargs__()
+            self.render('camera_setup.html', **kwargs)
+        if (BTN=='CAPT'):
+            self.redirect('camera_capture')
+        if (BTN=='PREV'):
+            self.redirect('camera_preview')
+        if (BTN=='TLAP'):
+            self.redirect('camera_timelapse')
+        
+    def __parse_args__(self, ):
+        global delta_time
+        global total_imgs
+        global total_time
+        global ISO
+        global shutter
+        delta_time = int(self.get_argument('D'))
+        total_imgs = int(self.get_argument('N'))
+        total_time = delta_time * (total_imgs-1)
+        ISO = int(self.get_argument('I'))
+        shutter = int(self.get_argument('S'))
+    
+    def __build_kwargs__(self, ):
+        kwargs = {}
+        kwargs['D'] = '?' if (delta_time==None) else '%g' % delta_time
+        kwargs['N'] = '?' if (total_imgs==None) else '%g' % total_imgs
+        kwargs['T'] = '?' if (total_time==None) else time.strftime("%H:%M:%S", time.gmtime(total_time))
+        kwargs['I_0'] = 'selected' if (ISO==0) else ''
+        kwargs['I_1'] = 'selected' if (ISO==100) else ''
+        kwargs['I_2'] = 'selected' if (ISO==200) else ''
+        kwargs['I_3'] = 'selected' if (ISO==320) else ''
+        kwargs['I_4'] = 'selected' if (ISO==400) else ''
+        kwargs['I_5'] = 'selected' if (ISO==500) else ''
+        kwargs['I_6'] = 'selected' if (ISO==640) else ''
+        kwargs['I_7'] = 'selected' if (ISO==800) else ''
+        kwargs['S_0'] = 'selected' if (shutter==0) else ''
+        kwargs['S_1'] = 'selected' if (shutter==2000000) else ''
+        kwargs['S_2'] = 'selected' if (shutter==1000000) else ''
+        kwargs['S_3'] = 'selected' if (shutter==500000) else ''
+        kwargs['S_4'] = 'selected' if (shutter==250000) else ''
+        kwargs['S_5'] = 'selected' if (shutter==125000) else ''
+        kwargs['S_6'] = 'selected' if (shutter==62500) else ''
+        kwargs['S_7'] = 'selected' if (shutter==31250) else ''
+        kwargs['S_8'] = 'selected' if (shutter==15625) else ''
+        kwargs['S_9'] = 'selected' if (shutter==7813) else ''
+        kwargs['S_10'] = 'selected' if (shutter==3906) else ''
+        kwargs['S_11'] = 'selected' if (shutter==1953) else ''
+        kwargs['S_12'] = 'selected' if (shutter==978) else ''
+        return kwargs
+    
+# camera time lapse
+class CameraTimeLapseHandler(tornado.web.RequestHandler):
+    def get(self):
         global delta_time
         global total_imgs
         global ISO
         global shutter
-        global camera
-        global total_time
         print "GET Request from {}".format(self.request.remote_ip)
-        delta_time  = int(self.get_argument("D", delta_time))
-        total_imgs  = int(self.get_argument("N", total_imgs))
-        ISO         = int(self.get_argument("I", ISO))
-        shutter     = int(self.get_argument("S", shutter))
-        total_time  = delta_time * (total_imgs-1)
-        camera.set_cam_config(iso=ISO, shutter_speed=shutter)
-        #camera.disp_msg("DT=%g  N=%g ISO=%g s=%g" % (delta_time, total_imgs, ISO, shutter))
-        disp_show_summary2()
-        self.render("camera_setup.html")
-        
-    def post(self):
-        print "POST Request from {}".format(self.request.remote_ip)
-        self.write("there is no post handler")
-        
-# camera time lapse
-class CameraTimeLapseHandler(tornado.web.RequestHandler):
-    def get(self):
-        #global delta_time
-        #global total_imgs
-        #global ISO
-        #global shutter
-        print "GET Request from {}".format(self.request.remote_ip)
-        #camera.disp_msg("DT=%g  N=%g ISO=%g s=%g" % (delta_time, total_imgs, ISO, shutter))
         disp_show_summary()
         self.write('<html><body>'
                    '<h1>'
@@ -303,7 +348,7 @@ class CameraTimeLapseHandler(tornado.web.RequestHandler):
                    'DONE.'
                    '</h1>'
                    '</body></html>')
-
+       
 # separate HTTP and WebSockets based on URL
 handlers = ([
     (r"/camera_setup",      CameraSetUpHandler),
@@ -324,7 +369,8 @@ server = tornado.httpserver.HTTPServer(app)
 print "start listening on port {}...".format(PORT)
 server.listen(PORT)
 print "start ioloop..."
-camera.disp_msg("SERVER UP!")
+#camera.disp_msg("SERVER UP!")
+disp_big_msg(" UP ")
 tornado.ioloop.IOLoop.instance().start()
 print "i guess we're done then."
 
