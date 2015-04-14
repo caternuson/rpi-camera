@@ -36,15 +36,17 @@ PORT = 8008
 camera = campi.Campi()
 resolution = (1920, 1080)                   # resolution of images
 jpeg_quality = 100                          # jpeg image quality
-camera.set_cam_config(resolution=resolution,quality=jpeg_quality)
+ISO = 400                                   # default ISO
+shutter = 0                                 # default shutter speed
+camera.set_cam_config(  resolution=resolution,
+                        quality=jpeg_quality,
+                        iso=ISO,
+                        shutter_speed=shutter)
 
 # Default time lapse config
 delta_time = 10                             # delta time in seconds
 total_imgs = 2                           # total number of images
 total_time = delta_time * (total_imgs-1)    # total time in seconds
-
-ISO = 400
-shutter = 0
 
 #-------------------------------------------------------------------------
 # LCD display functions
@@ -127,10 +129,9 @@ def disp_show_status(time_to_next, image_count, time_remaining):
     camera.disp_image(disp_image)
     
 def update_camera():
-    global ISO
-    global shutter
-    camera._iso = ISO
-    camera._shutter_speed = shutter
+    camera.set_cam_config(  iso=ISO,
+                            shutter_speed=shutter
+                         )
 
 #-------------------------------------------------------------------------
 # Time Lapse
@@ -194,6 +195,9 @@ def start_timelapse():
 # camera shut down
 class CameraShutDownHandler(tornado.web.RequestHandler):
     def get(self, ):
+        self.render("camera_shutdown.html")
+        
+    def post(self, ):
         camera.disp_msg("BYE BYE")
         print "BYE BYE"
         self.write( '<html><body>'
@@ -323,23 +327,20 @@ class CameraSetUpHandler(tornado.web.RequestHandler):
 # camera time lapse
 class CameraTimeLapseHandler(tornado.web.RequestHandler):
     def get(self):
-        global delta_time
-        global total_imgs
-        global ISO
-        global shutter
         print "GET Request from {}".format(self.request.remote_ip)
         disp_show_summary()
-        self.write('<html><body>'
-                   '<h1>'
-                   'delta_time=%g<br/>' % (delta_time) +
-                   'total_imgs=%g<br/>' % (total_imgs) +
-                   'total_time=%g<br/>' % (total_time) +
-                   'ISO=%g<br/>' % (camera._iso) +
-                   'shutter_speed=%g<br/>' % (camera._shutter_speed) +
-                   '</h1>'
-                   '<form method="POST"><input type="submit" value="GO"/>'
-                   '</body></html>')
-       
+        kwargs = self.__build_kwargs__()
+        self.render('camera_timelapse.html', **kwargs)
+  
+    def __build_kwargs__(self, ):
+        kwargs = {}
+        kwargs['D'] = '?' if (delta_time==None) else '%g' % delta_time
+        kwargs['N'] = '?' if (total_imgs==None) else '%g' % total_imgs
+        kwargs['T'] = '?' if (total_time==None) else time.strftime("%H:%M:%S", time.gmtime(total_time)) 
+        kwargs['I'] = ISO
+        kwargs['S'] = shutter
+        return kwargs
+        
     def post(self):
         # for now, this is a blocking call
         start_timelapse()
@@ -349,7 +350,7 @@ class CameraTimeLapseHandler(tornado.web.RequestHandler):
                    '</h1>'
                    '</body></html>')
        
-# separate HTTP and WebSockets based on URL
+# map URLs to handlers
 handlers = ([
     (r"/camera_setup",      CameraSetUpHandler),
     (r"/camera_timelapse",  CameraTimeLapseHandler),
@@ -369,7 +370,6 @@ server = tornado.httpserver.HTTPServer(app)
 print "start listening on port {}...".format(PORT)
 server.listen(PORT)
 print "start ioloop..."
-#camera.disp_msg("SERVER UP!")
 disp_big_msg(" UP ")
 tornado.ioloop.IOLoop.instance().start()
 print "i guess we're done then."
