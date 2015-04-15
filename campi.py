@@ -48,7 +48,10 @@ class Campi():
         self._resolution = (2592,1944)  # full resolution 2592 x 1944
         self._iso = 0                   # 0(auto), 100, 200, 320, 400, 500, 640, 800
         self._shutter_speed = 0         # 0(auto), value in microseconds
-        self._brightness = 50           # 0 - 100
+        self._brightness = 50           # 0 - 100 (50)
+        self._contrast = 0              # -100 - 100 (0)
+        self._sharpness = 0             # -100 - 100 (0)
+        self._saturation = 0            # -100 - 100 (0)
         self._awb_mode = 'auto'         # auto white balance mode (see doc)
         self._hvflip = (True, True)     # horizontal/vertical flip
         self._quality = 100             # 0 - 100,  applies only to JPGs
@@ -90,6 +93,9 @@ class Campi():
                                 iso = None,
                                 shutter_speed = None,
                                 brightness = None,
+                                contrast = None,
+                                sharpness = None,
+                                saturation = None,
                                 awb_mode = None,
                                 hvflip = None,
                                 quality = None,
@@ -102,6 +108,12 @@ class Campi():
             self._shutter_speed = shutter_speed
         if not brightness==None:
             self._brightness = brightness
+        if not contrast==None:
+            self._contrast = contrast
+        if not sharpness==None:
+            self._sharpness = sharpness
+        if not saturation==None:
+            self._saturation = saturation
         if not awb_mode==None:
             self._awb_mode = awb_mode
         if not hvflip==None:
@@ -116,6 +128,9 @@ class Campi():
         cam.iso =  self._iso
         cam.shutter_speed = self._shutter_speed
         cam.brightness = self._brightness
+        cam.constrast = self._contrast
+        cam.sharpness = self._sharpness
+        cam.saturation = self._saturation
         cam.awb_mode = self._awb_mode
         cam.hflip = self._hvflip[0]
         cam.vflip = self._hvflip[1]

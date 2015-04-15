@@ -34,18 +34,21 @@ PORT = 8008
 
 # Camera setup
 camera = campi.Campi()
-resolution = (1920, 1080)                   # resolution of images
-jpeg_quality = 100                          # jpeg image quality
-ISO = 400                                   # default ISO
+ISO = 100                                   # default ISO
 shutter = 0                                 # default shutter speed
-camera.set_cam_config(  resolution=resolution,
-                        quality=jpeg_quality,
+camera.set_cam_config(  resolution=(1920, 1080),
+                        quality=100,
+                        brightness = 50,
+                        contrast = 5,
+                        sharpness = 0,
+                        saturation = 10,
+                        awb_mode = 'auto',
                         iso=ISO,
                         shutter_speed=shutter)
 
 # Default time lapse config
 delta_time = 10                             # delta time in seconds
-total_imgs = 2                           # total number of images
+total_imgs = 4                           # total number of images
 total_time = delta_time * (total_imgs-1)    # total time in seconds
 
 #-------------------------------------------------------------------------
@@ -322,6 +325,7 @@ class CameraSetUpHandler(tornado.web.RequestHandler):
         kwargs['S_10'] = 'selected' if (shutter==3906) else ''
         kwargs['S_11'] = 'selected' if (shutter==1953) else ''
         kwargs['S_12'] = 'selected' if (shutter==978) else ''
+        kwargs['S_13'] = 'selected' if (shutter==489) else ''
         return kwargs
     
 # camera time lapse
