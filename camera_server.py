@@ -161,6 +161,14 @@ def start_timelapse():
     start_time  = time.time()
     finish_time = start_time + total_time
     
+    # Write info to manifest file
+    with open(timelapse_name+'_info.txt','w') as f:
+        f.write("%s\n" % timelapse_name)
+        f.write("delta_time = %g\n" % delta_time)
+        f.write("total_imgs = %g\n" % total_imgs)
+        f.write("ISO = %g\n" % ISO)
+        f.write("shutter = %g\n" %shutter)
+    
     # Try block for image capture
     try:                
         # Main time lapse loop
