@@ -171,7 +171,7 @@ class Campi():
     #---------------------------------------------------------------
     # Button functions
     #---------------------------------------------------------------
-    def get_button(self, btn=None):
+    def __get_raw_button(self, btn=None):
         if (btn==None):
             return (self._gpio.input(BTN_UP),
                     self._gpio.input(BTN_DOWN),
@@ -182,15 +182,21 @@ class Campi():
             return self._gpio.input(btn)
         else:
             return None
-        
+            
     def is_pressed(self, btn=None):
         if (btn in BUTTONS):
-            if (self.get_button(btn)==0):
+            if (self.__get_raw_button(btn)==0):
                 return True
             else:
                 return False
         else:
             return None
+        
+    def get_buttons(self, ):
+        state = {}
+        for B in BUTTONS:
+            state[B] = self.is_pressed(B)
+        return state
    
 #--------------------------------------------------------------------
 # MAIN 

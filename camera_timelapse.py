@@ -21,8 +21,8 @@ import os
 
 # Contstants
 DEBOUNCE = 0.05                 # simple software debounce timing
-MIN_DELTA_TIME = 5              # minimum time in seconds between images
-MIN_IMGS = 1                    # mimumum number of images (1 is pretty stupid)
+MIN_DELTA_TIME = 0              # minimum time in seconds between images
+MIN_IMGS = 0                    # mimumum number of images (1 is pretty stupid)
 
 # Root directory where app was launched
 root_dir = os.getcwd()
@@ -34,16 +34,16 @@ jpeg_quality = 100                          # jpeg image quality
 camera.set_cam_config(resolution=resolution,quality=jpeg_quality)
 
 # Default time lapse config
-delta_time = 60                             # delta time in seconds
-total_imgs = 500                           # total number of images
+delta_time = 10                             # delta time in seconds
+total_imgs = 4                              # total number of images
 total_time = delta_time * (total_imgs-1)    # total time in seconds
 
 # List of buttons and dictionary of state
-buttons = [campi.BTN_1,
-           campi.BTN_2,
-           campi.BTN_3,
-           campi.BTN_4,
-           campi.BTN_5]
+buttons = [campi.BTN_UP,
+           campi.BTN_DOWN,
+           campi.BTN_LEFT,
+           campi.BTN_RIGHT,
+           campi.BTN_SEL]
 button_state = {}
 button_pressed = False
 
@@ -120,20 +120,19 @@ print "Time lapse app started."
 print "="*25
 while True:    
     # Read buttons
-    for button in buttons:
-        button_state[button] = camera.get_button(button)
+    button_state = camera.get_buttons()
     
     # Up/Down buttons for total images and delta time   
-    if (button_state[campi.BTN_2]):
+    if (button_state[campi.BTN_UP]):
         total_imgs += 1
         button_pressed = True
-    if (button_state[campi.BTN_3]):
+    if (button_state[campi.BTN_DOWN]):
         total_imgs -= 1
         button_pressed = True
-    if (button_state[campi.BTN_4]):
+    if (button_state[campi.BTN_RIGHT]):
         delta_time += 1
         button_pressed = True
-    if (button_state[campi.BTN_5]):
+    if (button_state[campi.BTN_LEFT]):
         delta_time -= 1
         button_pressed = True
               
@@ -150,7 +149,7 @@ while True:
         button_pressed = False
         
     # Time lapse start button
-    if (button_state[campi.BTN_1]):
+    if (button_state[campi.BTN_SEL]):
         
         # Display summary
         disp_show_summary()
@@ -160,20 +159,25 @@ while True:
         # Prevent hair trigger on verify button
         time.sleep(10*DEBOUNCE)
         while True:
-            for button in buttons:
-                button_state[button] = camera.get_button(button)
-            if (button_state[campi.BTN_1]):
+            button_state = camera.get_buttons()
+            if (button_state[campi.BTN_SEL]):
                 start_timelapse = True
                 break
-            if (button_state[campi.BTN_2] or
-                button_state[campi.BTN_3] or
-                button_state[campi.BTN_4] or
-                button_state[campi.BTN_5]):
+            if (button_state[campi.BTN_UP] or
+                button_state[campi.BTN_DOWN] or
+                button_state[campi.BTN_LEFT] or
+                button_state[campi.BTN_RIGHT]):
                 start_timelapse = False
                 break
             time.sleep(DEBOUNCE)
                 
         if start_timelapse:
+            
+            # Exit app if delta_time and total_imgs=0
+            if (delta_time==0) and (total_imgs==0):
+                print "Exiting app...Bye"
+                disp_big_msg(" BYE  ")
+                exit()
             
             # Camera setup takes a while, so provide a wait message 
             print "OK."  
