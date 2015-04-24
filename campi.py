@@ -6,7 +6,7 @@
 # There are three main chunks of hardware:
 #   * camera = rpi camera module
 #   * display = Nokia LCD
-#   * buttons = basic push buttons on GPIO
+#   * buttons = a 5 way navigation switch w/ common ground
 #
 # 2014-10-30
 # Carter Nelson
@@ -20,14 +20,15 @@ import Image
 import ImageDraw
 import ImageFont
 
-# 5 way navigation switch, common ground
+# GPIO pins for 5 way navigation switch
 BTN_UP              =   19      # Up
 BTN_DOWN            =   16      # Down
 BTN_LEFT            =   26      # Left
 BTN_RIGHT           =   20      # Right
 BTN_SEL             =   21      # Select (push)
+BUTTONS = [BTN_UP, BTN_DOWN, BTN_LEFT, BTN_RIGHT, BTN_SEL]
 
-# Nokia LCD display control on GPIO
+# GPIO pins for Nokia LCD display control
 LCD_DC              =   23      # Nokia LCD display D/C
 LCD_RST             =   24      # Nokia LCD displat Reset
 LCD_SPI_PORT        =   0       # Hardware SPI port to use
@@ -55,7 +56,7 @@ class Campi():
         self._awb_mode = 'auto'         # auto white balance mode (see doc)
         self._hvflip = (True, True)     # horizontal/vertical flip
         self._quality = 100             # 0 - 100,  applies only to JPGs
-        
+ 
         self._disp = LCD.PCD8544(LCD_DC,
                                  LCD_RST,
                                  spi=SPI.SpiDev(LCD_SPI_PORT,
@@ -69,13 +70,10 @@ class Campi():
         self._gpio = GPIO
         self._gpio.setwarnings(False)
         self._gpio.setmode(GPIO.BCM)
-        GPIO.setup(BTN_UP,      GPIO.IN , pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(BTN_DOWN,    GPIO.IN , pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(BTN_LEFT,    GPIO.IN , pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(BTN_RIGHT,   GPIO.IN , pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(BTN_SEL,     GPIO.IN , pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(LCD_LED,     GPIO.OUT, initial=GPIO.LOW)
-
+        for B in BUTTONS:
+            GPIO.setup(B, GPIO.IN , pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(LCD_LED, GPIO.OUT, initial=GPIO.LOW)
+        
     #---------------------------------------------------------------
     # Raspberry Pi Camera functions
     #---------------------------------------------------------------
@@ -180,8 +178,17 @@ class Campi():
                     self._gpio.input(BTN_LEFT),
                     self._gpio.input(BTN_RIGHT),
                     self._gpio.input(BTN_SEL))     
-        elif (btn in [BTN_UP, BTN_DOWN, BTN_LEFT, BTN_RIGHT, BTN_SEL]):
+        elif (btn in BUTTONS):
             return self._gpio.input(btn)
+        else:
+            return None
+        
+    def is_pressed(self, btn=None):
+        if (btn in BUTTONS):
+            if (self.get_button(btn)==0):
+                return True
+            else:
+                return False
         else:
             return None
    
@@ -190,4 +197,3 @@ class Campi():
 #--------------------------------------------------------------------
 if __name__ == '__main__':
     print "I'm just a class, nothing to do..."
-    
