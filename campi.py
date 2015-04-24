@@ -20,12 +20,12 @@ import Image
 import ImageDraw
 import ImageFont
 
-# Control button locations on GPIO
-BTN_1               =   19
-BTN_2               =   16
-BTN_3               =   26
-BTN_4               =   20
-BTN_5               =   21
+# 5 way navigation switch, common ground
+BTN_UP              =   19      # Up
+BTN_DOWN            =   16      # Down
+BTN_LEFT            =   26      # Left
+BTN_RIGHT           =   20      # Right
+BTN_SEL             =   21      # Select (push)
 
 # Nokia LCD display control on GPIO
 LCD_DC              =   23      # Nokia LCD display D/C
@@ -69,12 +69,12 @@ class Campi():
         self._gpio = GPIO
         self._gpio.setwarnings(False)
         self._gpio.setmode(GPIO.BCM)
-        GPIO.setup(BTN_1,   GPIO.IN , pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(BTN_2,   GPIO.IN , pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(BTN_3,   GPIO.IN , pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(BTN_4,   GPIO.IN , pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(BTN_5,   GPIO.IN , pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setup(LCD_LED, GPIO.OUT, initial=GPIO.LOW)
+        GPIO.setup(BTN_UP,      GPIO.IN , pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BTN_DOWN,    GPIO.IN , pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BTN_LEFT,    GPIO.IN , pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BTN_RIGHT,   GPIO.IN , pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(BTN_SEL,     GPIO.IN , pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(LCD_LED,     GPIO.OUT, initial=GPIO.LOW)
 
     #---------------------------------------------------------------
     # Raspberry Pi Camera functions
@@ -175,12 +175,12 @@ class Campi():
     #---------------------------------------------------------------
     def get_button(self, btn=None):
         if (btn==None):
-            return (self._gpio.input(BTN_1),
-                    self._gpio.input(BTN_2),
-                    self._gpio.input(BTN_3),
-                    self._gpio.input(BTN_4),
-                    self._gpio.input(BTN_5))     
-        elif (btn in [BTN_1, BTN_2, BTN_3, BTN_4, BTN_5]):
+            return (self._gpio.input(BTN_UP),
+                    self._gpio.input(BTN_DOWN),
+                    self._gpio.input(BTN_LEFT),
+                    self._gpio.input(BTN_RIGHT),
+                    self._gpio.input(BTN_SEL))     
+        elif (btn in [BTN_UP, BTN_DOWN, BTN_LEFT, BTN_RIGHT, BTN_SEL]):
             return self._gpio.input(btn)
         else:
             return None
