@@ -79,10 +79,10 @@ while True:
                             ' starting.... ')            
             os.system('python /home/pi/start_ap.py')
             os.system('cd /home/pi/rpi-camera')
-            os.system('sudo python /home/pi/rpi-camera/camera_server.py')
+            os.system('python /home/pi/rpi-camera/camera_server.py')
         if (selection==3):
             # start non-wifi menu driven time lapse
-            os.system('sudo python /home/pi/rpi-camera/camera_timelapse.py')
+            os.system('python /home/pi/rpi-camera/camera_timelapse.py')
         if (selection==4):
             # do nothing, just exit
             pass

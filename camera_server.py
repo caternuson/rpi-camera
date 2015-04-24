@@ -209,16 +209,24 @@ class CameraShutDownHandler(tornado.web.RequestHandler):
         self.render("camera_shutdown.html")
         
     def post(self, ):
-        camera.disp_msg("BYE BYE")
-        print "BYE BYE"
-        self.write( '<html><body>'
-                    '<center><h1>BYE BYE</h1></center>'
-                    '</body></html>'
-                  )
-        time.sleep(5)
-        os.system("sudo halt") 
-        exit()
-
+        BTN = self.get_argument('BTN')
+        if (BTN=='POWER DOWN'):
+            camera.disp_msg("BYE BYE")
+            print "BYE BYE"
+            self.write( '<html><body>'
+                        '<center><h1>Powering down...</h1></center>'
+                        '</body></html>'
+                      )
+            time.sleep(5)
+            os.system("sudo halt") 
+            exit()
+        if (BTN=='STOP SERVER'):
+            self.write( '<html><body>'
+                        '<center><h1>Stopping server...</h1></center>'
+                        '</body></html>'
+                      )
+            tornado.ioloop.IOLoop.instance().stop()
+            
 # camera capture
 class CameraCaptureHandler(tornado.web.RequestHandler):
     def get(self, ):
@@ -382,7 +390,8 @@ server = tornado.httpserver.HTTPServer(app)
 print "start listening on port {}...".format(PORT)
 server.listen(PORT)
 print "start ioloop..."
-disp_big_msg(" UP ")
+disp_big_msg("  UP  ")
 tornado.ioloop.IOLoop.instance().start()
+disp_big_msg("STOPPD")
 print "i guess we're done then."
 
