@@ -19,6 +19,7 @@ import Adafruit_GPIO.SPI as SPI
 import Image
 import ImageDraw
 import ImageFont
+import io
 
 # GPIO pins for 5 way navigation switch
 BTN_UP              =   19      # Up
@@ -54,6 +55,7 @@ class Campi():
         self._sharpness = 0             # -100 - 100 (0)
         self._saturation = 0            # -100 - 100 (0)
         self._awb_mode = 'auto'         # auto white balance mode (see doc)
+        self._exposure_mode = 'auto'    # exposure mode (see doc)
         self._hvflip = (True, True)     # horizontal/vertical flip
         self._quality = 100             # 0 - 100,  applies only to JPGs
  
@@ -95,6 +97,7 @@ class Campi():
                                 sharpness = None,
                                 saturation = None,
                                 awb_mode = None,
+                                exposure_mode = None,
                                 hvflip = None,
                                 quality = None,
                                 ):
@@ -114,11 +117,50 @@ class Campi():
             self._saturation = saturation
         if not awb_mode==None:
             self._awb_mode = awb_mode
+        if not exposure_mode==None:
+            self._exposure_mode = exposure_mode
         if not hvflip==None:
             self._hvflip = hvflip
         if not quality==None:
             self._quality = quality
+            
+    def get_histogram(self, size=(640,480)):
+        # capture image to PIL object
+        stream = io.BytesIO()
+        with picamera.PiCamera() as camera:
+            camera = self.__update_camera__(cam=camera)
+            camera.capture(stream, 'jpeg', quality=self._quality)
+        stream.seek(0)
+        im = Image.open(stream)
+        
+        # compute histogram, scaled for image size
+        hist = im.histogram()
+        rh = hist[0:256]
+        gh = hist[256:512]
+        bh = hist[512:768]
+        width = size[0]
+        height = size[1]
+        xs = float(width)/float(256)
+        ys = float(height)/float(max(hist))
 
+        rl=[]
+        gl=[]
+        bl=[]
+        for i in xrange(256):
+            rl.append((int(i*xs),height-int(rh[i]*ys)))
+            gl.append((int(i*xs),height-int(gh[i]*ys)))
+            bl.append((int(i*xs),height-int(bh[i]*ys)))        
+        
+        # draw it
+        im_hist = Image.new('RGB',size,'black')
+        draw = ImageDraw.Draw(im_hist)
+        draw.line(rl, fill='red', width=5)
+        draw.line(gl, fill='green', width=5)
+        draw.line(bl, fill='blue', width=5)
+        
+        return im_hist
+        
+            
     def __update_camera__(self, cam=None):
         if cam==None:
             return
@@ -130,6 +172,7 @@ class Campi():
         cam.sharpness = self._sharpness
         cam.saturation = self._saturation
         cam.awb_mode = self._awb_mode
+        cam.exposure_mode = self._exposure_mode
         cam.hflip = self._hvflip[0]
         cam.vflip = self._hvflip[1]
         return cam
