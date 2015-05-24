@@ -178,7 +178,8 @@ def start_timelapse():
             filename = timelapse_name+"_%04d.jpg" % image_count
             print("[{0}/{1}]:{2}".format(image_count,total_imgs,filename))
             acquire_start = time.time() 
-            camera.capture(filename)
+            #camera.capture(filename)
+            camera.capture_with_wait(filename)
             acquire_finish = time.time()
             acquire_time = acquire_finish - acquire_start
             # Pause
@@ -232,7 +233,8 @@ class CameraCaptureHandler(tornado.web.RequestHandler):
     def get(self, ):
         file_name = 'test.jpg'
         update_camera()
-        camera.capture(file_name)
+        #camera.capture(file_name)
+        camera.capture_with_wait(file_name)
         buf_size = 4096
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Disposition', 'attachment; filename=' + file_name)

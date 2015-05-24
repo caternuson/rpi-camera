@@ -19,7 +19,7 @@ import Adafruit_GPIO.SPI as SPI
 import Image
 import ImageDraw
 import ImageFont
-import io
+import io, os, time
 
 # GPIO pins for 5 way navigation switch
 BTN_UP              =   19      # Up
@@ -36,13 +36,44 @@ LCD_SPI_PORT        =   0       # Hardware SPI port to use
 LCD_SPI_DEVICE      =   0       # Hardware SPI device (determines chip select pin used)
 LCD_LED             =   22      # LCD LED enable pin (HIGH=ON, LOW=OFF)
 
+# Root directory where app was launched
+root_dir = os.getcwd()
+
 # Load fonts
 font_small = ImageFont.load_default()
+font_large = ImageFont.truetype("5Identification-Mono.ttf",12)
 
 # Image draw buffer for writing to LCD display
-WHOLE_SCREEN    = ((0,0),(LCD.LCDWIDTH, LCD.LCDHEIGHT))
 disp_image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
 disp_draw  = ImageDraw.Draw(disp_image)
+
+# Display locations
+WHOLE_SCREEN    = ((0,0),(LCD.LCDWIDTH, LCD.LCDHEIGHT))
+BIG4_1          = (31,0)
+BIG4_2          = (31,18)
+BIG_MSG         = (0,12)         
+BIG4_1_LABEL    = (4,5)
+BIG4_2_LABEL    = (4,23)
+TIME_1          = (4,36)
+TIME_2          = (2,36)
+TOT_IMG         = (60,36)
+OK_CONFIRM      = (4,14)
+PROG_BAR_H      = 31
+PROG_BAR_W      = 14
+PROG_BAR_LOC    = (8,4)
+PROG_BAR_BOX    = (PROG_BAR_LOC,(PROG_BAR_LOC[0]+PROG_BAR_W,PROG_BAR_LOC[1]+PROG_BAR_H))
+
+# Timelapse information
+tl_info = {}
+tl_info['name'] = None
+tl_info['total_imgs'] = 0
+tl_info['delta_time'] = 0
+tl_info['total_time'] = tl_info['delta_time'] * (tl_info['total_imgs']-1)
+tl_info['image_count'] = 0
+tl_info['start_time'] = 0
+tl_info['finish_time'] = 0
+tl_info['time_remaining'] = 0
+tl_info['time_to_next'] = 0
 
 class Campi():
         
@@ -58,6 +89,7 @@ class Campi():
         self._exposure_mode = 'auto'    # exposure mode (see doc)
         self._hvflip = (True, True)     # horizontal/vertical flip
         self._quality = 100             # 0 - 100,  applies only to JPGs
+        self._awb_gains = None
  
         self._disp = LCD.PCD8544(LCD_DC,
                                  LCD_RST,
@@ -83,10 +115,84 @@ class Campi():
         with picamera.PiCamera() as camera:
             camera = self.__update_camera__(cam=camera)
             camera.capture(filename, quality=self._quality)
-     
+            
+    def capture_with_wait(self, filename, wait=2):
+        with picamera.PiCamera() as camera:
+            camera = self.__update_camera__(cam=camera)
+            camera.framerate = 30
+            camera.start_preview()
+            time.sleep(wait)
+            camera.capture(filename, quality=self._quality)
+            
+    def capture_timelapse2(self, total_imgs=None, delta_time=None):
+        tl_info['total_imgs'] = total_imgs
+        tl_info['delta_time'] = delta_time
+        tl_info['total_time'] = tl_info['delta_time'] * (tl_info['total_imgs']-1)
+        tl_info['start_time'] = time.time()
+        tl_info['finish_time'] = tl_info['start_time'] + tl_info['total_time']
+        tl_info['image_count'] = 1
+        tl_info['name'] = time.strftime("%Y%m%d_%H%M",time.localtime())
+        os.mkdir(tl_info['name'])
+        os.chdir(tl_info['name'])
+        tl_info['acquire_start'] = time.time()
+        while (tl_info['image_count'] <= tl_info['total_imgs']):
+            self.disp_big_msg(" TAKE ")
+            self.capture_with_wait(tl_info['name']+'_%04d.jpg'%tl_info['image_count'])
+            self.__timelapse_wait__()
+            tl_info['image_count'] += 1
+        os.chdir(root_dir)
+            
+    def capture_timelapse(self, total_imgs=None, delta_time=None):
+        tl_info['total_imgs'] = total_imgs
+        tl_info['delta_time'] = delta_time
+        tl_info['total_time'] = tl_info['delta_time'] * (tl_info['total_imgs']-1)
+        tl_info['start_time'] = time.time()
+        tl_info['finish_time'] = tl_info['start_time'] + tl_info['total_time']
+        
+        with picamera.PiCamera() as camera:
+            # set camera parameters
+            camera = self.__update_camera__(cam=camera)
+            
+            # let gains auto adjust, then freeze values
+            camera.framerate = 30
+            camera.start_preview()
+            time.sleep(2)
+            camera.exposure_mode = 'off'
+            g = camera.awb_gains
+            camera.awb_mode = 'off'
+            camera.awb_gains = g
+            
+            # actual time lapse loop
+            tl_info['image_count'] = 0
+            tl_info['name'] = time.strftime("%Y%m%d_%H%M",time.localtime())
+            os.mkdir(tl_info['name'])
+            os.chdir(tl_info['name'])
+            tl_info['acquire_start'] = time.time()
+            self.disp_big_msg(" TAKE ")
+            for filename in camera.capture_continuous(tl_info['name']+'_{counter:04d}.jpg'):
+                tl_info['image_count'] += 1
+                if (tl_info['image_count'] >= tl_info['total_imgs']):
+                    break;
+                self.__timelapse_wait__()
+                self.disp_big_msg(" TAKE ")
+                tl_info['acquire_start'] = time.time()
+            
+        os.chdir(root_dir)
+                        
+    def __timelapse_wait__(self, ):
+        keep_waiting = True
+        while keep_waiting:
+            time.sleep(0.250)
+            tl_info['time_to_next'] = tl_info['acquire_start'] + tl_info['delta_time'] - time.time()
+            tl_info['time_remaining'] = tl_info['time_to_next'] + tl_info['delta_time']*(tl_info['total_imgs']-tl_info['image_count']-1)
+            self.disp_show_tl_status()
+            if (tl_info['time_to_next'] <= 0 ):
+                keep_waiting = False
+                        
     def capture_stream(self, ios):
         with picamera.PiCamera() as camera:
             camera = self.__update_camera__(cam=camera)
+
             camera.capture(ios, 'jpeg', use_video_port=True, resize=(400,225))
                     
     def set_cam_config(self,    resolution = None,
@@ -124,11 +230,18 @@ class Campi():
         if not quality==None:
             self._quality = quality
             
-    def get_histogram(self, size=(640,480)):
+    def capture_with_histogram(self, filename):
         # capture image to PIL object
         stream = io.BytesIO()
         with picamera.PiCamera() as camera:
             camera = self.__update_camera__(cam=camera)
+            # let gains auto adjust, then freeze values
+            camera.framerate = 30
+            time.sleep(2)
+            camera.exposure_mode = 'off'
+            g = camera.awb_gains
+            camera.awb_mode = 'off'
+            camera.awb_gains = g
             camera.capture(stream, 'jpeg', quality=self._quality)
         stream.seek(0)
         im = Image.open(stream)
@@ -138,8 +251,7 @@ class Campi():
         rh = hist[0:256]
         gh = hist[256:512]
         bh = hist[512:768]
-        width = size[0]
-        height = size[1]
+        (width, height) = im.size
         xs = float(width)/float(256)
         ys = float(height)/float(max(hist))
 
@@ -152,14 +264,12 @@ class Campi():
             bl.append((int(i*xs),height-int(bh[i]*ys)))        
         
         # draw it
-        im_hist = Image.new('RGB',size,'black')
-        draw = ImageDraw.Draw(im_hist)
+        #im_hist = Image.new('RGB',size,'black')
+        draw = ImageDraw.Draw(im)
         draw.line(rl, fill='red', width=5)
         draw.line(gl, fill='green', width=5)
         draw.line(bl, fill='blue', width=5)
-        
-        return im_hist
-        
+        im.save(filename,quality=95)      
             
     def __update_camera__(self, cam=None):
         if cam==None:
@@ -210,7 +320,27 @@ class Campi():
             disp_draw.text((0,y), line, font=font_small)
             y += fh
         self.disp_image(disp_image)
-                
+        
+    def disp_big_msg(self, msg, location=BIG_MSG):
+        # Display a message using large font
+        disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+        disp_draw.text(location, msg, font=font_large)
+        self.disp_image(disp_image)
+
+    def disp_show_tl_status(self, ):
+        disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+        disp_draw.rectangle(PROG_BAR_BOX, outline=0, fill=255)
+        #progress = int(float(PROG_BAR_H) * ( float(image_count)/float(total_imgs)))
+        progress = int(float(PROG_BAR_H) * ((tl_info['total_time']-tl_info['time_remaining'])/tl_info['total_time']))
+        PROG_BAR_FILL = ((PROG_BAR_LOC[0], PROG_BAR_LOC[1]+PROG_BAR_H-progress),
+                        (PROG_BAR_LOC[0]+PROG_BAR_W,PROG_BAR_LOC[1]+PROG_BAR_H))
+        disp_draw.rectangle(PROG_BAR_FILL, outline=0, fill=0)
+        disp_draw.text(BIG4_2, "%04d" % (tl_info['image_count']), font=font_large)
+        disp_draw.text(BIG4_1,"%04d" % (tl_info['time_to_next']), font=font_large)
+        disp_draw.text(TIME_2, time.strftime("%H:%M:%S", time.gmtime(tl_info['time_remaining'])), font=font_small)
+        disp_draw.text(TOT_IMG, "%04d" % (tl_info['total_imgs']), font=font_small)
+        self.disp_image(disp_image)
+               
     #---------------------------------------------------------------
     # Button functions
     #---------------------------------------------------------------
