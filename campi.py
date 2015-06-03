@@ -192,7 +192,6 @@ class Campi():
     def capture_stream(self, ios):
         with picamera.PiCamera() as camera:
             camera = self.__update_camera__(cam=camera)
-
             camera.capture(ios, 'jpeg', use_video_port=True, resize=(400,225))
                     
     def set_cam_config(self,    resolution = None,
