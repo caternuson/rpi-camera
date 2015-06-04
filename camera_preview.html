@@ -1,11 +1,28 @@
 <html>
+    
 <head>
 <title>Camera Preview</title>
+<style>
+body,input,option,select {
+    font-family: sans-serif;
+    font-size: 100px;
+    margin-bottom: 10px;
+}
+input {
+    border-style: solid;
+    border-width: 10px;
+    border-color: black;
+}
+    
+</style>
 </head>
+
 <body>
 <center>
     <img id="preview" width=400 height=225/><br/>
-    <h1><a href="camera_setup">SETUP</a></h1>
+    <form method="POST">
+    <input type="submit" style="background:#11ff11;" name="BTN" value="SETUP"/>
+    </form>
 </center>    
     
 <script>

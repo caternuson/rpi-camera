@@ -178,7 +178,8 @@ class Campi():
         draw.line(rl, fill='red', width=lw)
         draw.line(gl, fill='green', width=lw)
         draw.line(bl, fill='blue', width=lw)
-        im_out.save(filename, quality=95)      
+        im_out.save(filename, quality=95)
+        os.remove(hname)
             
     def __update_camera__(self, cam=None):
         if cam==None:

@@ -253,6 +253,11 @@ class CameraPreviewHandler(tornado.web.RequestHandler):
         print "GET Request from {}".format(self.request.remote_ip)
         self.render("camera_preview.html")
 
+    def post(self, ):
+        BTN = self.get_argument('BTN')
+        if (BTN=='SETUP'):
+            self.redirect('camera_setup')
+            
 # camera preview webscoket        
 class CameraPreviewWebSocket(tornado.websocket.WebSocketHandler):
     
@@ -345,6 +350,13 @@ class CameraSetUpHandler(tornado.web.RequestHandler):
         kwargs['S_11'] = 'selected' if (shutter==1953) else ''
         kwargs['S_12'] = 'selected' if (shutter==978) else ''
         kwargs['S_13'] = 'selected' if (shutter==489) else ''
+        kwargs['S_14'] = 'selected' if (shutter==400) else ''
+        kwargs['S_15'] = 'selected' if (shutter==350) else ''
+        kwargs['S_16'] = 'selected' if (shutter==300) else ''
+        kwargs['S_17'] = 'selected' if (shutter==250) else ''
+        kwargs['S_18'] = 'selected' if (shutter==200) else ''
+        kwargs['S_19'] = 'selected' if (shutter==150) else ''
+        kwargs['S_20'] = 'selected' if (shutter==100) else ''
         return kwargs
     
 # camera time lapse
