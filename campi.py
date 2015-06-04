@@ -140,28 +140,20 @@ class Campi():
         if not quality==None:
             self._quality = quality
             
-    def capture_with_histogram(self, filename):
-        # capture image to PIL object
-        stream = io.BytesIO()
-        with picamera.PiCamera() as camera:
-            camera = self.__update_camera__(cam=camera)
-            # let gains auto adjust, then freeze values
-            camera.framerate = 30
-            time.sleep(2)
-            camera.exposure_mode = 'off'
-            g = camera.awb_gains
-            camera.awb_mode = 'off'
-            camera.awb_gains = g
-            camera.capture(stream, 'jpeg', quality=self._quality)
-        stream.seek(0)
-        im = Image.open(stream)
+    def capture_with_histogram(self, filename, fill=False):
+        # capture then open in PIL image
+        hname = 'hist_' + time.strftime("%H%M%S", time.localtime()) + '.jpg'
+        self.capture_with_wait(hname)
+        im_in   = Image.open(hname)
+        im_out  = Image.new('RGBA', im_in.size)
+        im_out.paste(im_in)
         
         # compute histogram, scaled for image size
-        hist = im.histogram()
+        hist = im_in.histogram()
         rh = hist[0:256]
         gh = hist[256:512]
         bh = hist[512:768]
-        (width, height) = im.size
+        (width, height) = im_in.size
         xs = float(width)/float(256)
         ys = float(height)/float(max(hist))
 
@@ -174,12 +166,19 @@ class Campi():
             bl.append((int(i*xs),height-int(bh[i]*ys)))        
         
         # draw it
-        #im_hist = Image.new('RGB',size,'black')
-        draw = ImageDraw.Draw(im)
-        draw.line(rl, fill='red', width=5)
-        draw.line(gl, fill='green', width=5)
-        draw.line(bl, fill='blue', width=5)
-        im.save(filename,quality=95)      
+        lw = max(5,int((0.005*max(im_out.size))))
+        draw = ImageDraw.Draw(im_out)
+        if (fill):
+            rpoly = [(0,height)] + rl + [(width,height)]
+            gpoly = [(0,height)] + gl + [(width,height)]
+            bpoly = [(0,height)] + bl + [(width,height)]
+            draw.polygon(rpoly, fill=(255,0,0,90))
+            draw.polygon(gpoly, fill=(0,255,0,90))
+            draw.polygon(bpoly, fill=(0,0,255,90))
+        draw.line(rl, fill='red', width=lw)
+        draw.line(gl, fill='green', width=lw)
+        draw.line(bl, fill='blue', width=lw)
+        im_out.save(filename, quality=95)      
             
     def __update_camera__(self, cam=None):
         if cam==None:
