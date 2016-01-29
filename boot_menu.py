@@ -18,12 +18,12 @@ camera = campi.Campi()
 selection = 1
 
           #01234567890123
-BLANK   = '  [ ] '
-CHECKED = '  [X] '
-MENU1   =       'HOME    '
-MENU2   =       'AP      '
-MENU3   =       'NONE    '
-MENU4   =       'EXIT    '
+BLANK   = ' [ ] '
+CHECKED = ' [X] '
+MENU1   =      'HOME WIFI'
+MENU2   =      'AP WIFI  '
+MENU3   =      'NO WIFI  '
+MENU4   =      'EXIT     '
 
 cursor = {}
 cursor['1'] = BLANK
