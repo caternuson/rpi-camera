@@ -175,8 +175,8 @@ def start_timelapse():
         for image_count in xrange(1,total_imgs+1):
             # Take the image
             disp_big_msg(" TAKE ")
-            #filename = timelapse_name+"_%04d.jpg" % image_count
-            filename = timelapse_name+"_%04d.png" % image_count
+            filename = timelapse_name+"_%04d.jpg" % image_count
+            #filename = timelapse_name+"_%04d.png" % image_count
             print("[{0}/{1}]:{2}".format(image_count,total_imgs,filename))
             acquire_start = time.time() 
             #camera.capture(filename)
