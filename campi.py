@@ -35,6 +35,7 @@ LCD_RST             =   24      # Nokia LCD displat Reset
 LCD_SPI_PORT        =   0       # Hardware SPI port to use
 LCD_SPI_DEVICE      =   0       # Hardware SPI device (determines chip select pin used)
 LCD_LED             =   22      # LCD LED enable pin (HIGH=ON, LOW=OFF)
+LCD_CONTRAST        =   50      # LCD contrast 0-100
 
 # Root directory where app was launched
 root_dir = os.getcwd()
@@ -73,7 +74,7 @@ class Campi():
                                                 LCD_SPI_DEVICE,
                                                 max_speed_hz=4000000)
                                  )
-        self._disp.begin(contrast=35)
+        self._disp.begin(contrast=LCD_CONTRAST)
         self._disp.clear()
         self._disp.display()
         
