@@ -21,6 +21,8 @@ import ImageDraw
 import ImageFont
 import io, os, time
 
+from fractions import Fraction
+
 # GPIO pins for 5 way navigation switch
 BTN_UP              =   19      # Up
 BTN_DOWN            =   16      # Down
@@ -55,17 +57,18 @@ BIG_MSG         = (0,12)
 class Campi():
         
     def __init__(self):          
-        self._resolution = (2592,1944)  # full resolution 2592 x 1944
-        self._iso = 0                   # 0(auto), 100, 200, 320, 400, 500, 640, 800
-        self._shutter_speed = 0         # 0(auto), value in microseconds
-        self._brightness = 50           # 0 - 100 (50)
-        self._contrast = 0              # -100 - 100 (0)
-        self._sharpness = 0             # -100 - 100 (0)
-        self._saturation = 0            # -100 - 100 (0)
-        self._awb_mode = 'auto'         # auto white balance mode (see doc)
-        self._exposure_mode = 'auto'    # exposure mode (see doc)
-        self._hvflip = (True, True)     # horizontal/vertical flip
-        self._quality = 100             # 0 - 100,  applies only to JPGs
+        self._resolution = (2592,1944)      # full resolution 2592 x 1944
+        self._iso = 0                       # 0(auto), 100, 200, 320, 400, 500, 640, 800
+        self._shutter_speed = 0             # 0(auto), value in microseconds
+        self._framerate = Fraction(30,1)    # NOTE: this limits max shutter speed
+        self._brightness = 50               # 0 - 100 (50)
+        self._contrast = 0                  # -100 - 100 (0)
+        self._sharpness = 0                 # -100 - 100 (0)
+        self._saturation = 0                # -100 - 100 (0)
+        self._awb_mode = 'auto'             # auto white balance mode (see doc)
+        self._exposure_mode = 'auto'        # exposure mode (see doc)
+        self._hvflip = (True, True)         # horizontal/vertical flip
+        self._quality = 100                 # 0 - 100,  applies only to JPGs
         self._awb_gains = None
  
         self._disp = LCD.PCD8544(LCD_DC,
@@ -90,8 +93,21 @@ class Campi():
     #---------------------------------------------------------------
     def capture(self, filename):
         with picamera.PiCamera() as camera:
+            #TODO: clean this up after testing is done
+            self._framerate = Fraction(1 , 6)
+            self._exposure_mode = 'off'  # off ~= manual
+            self._awb_mode = 'auto'
             camera = self.__update_camera__(cam=camera)
+            print camera.framerate
+            print camera.exposure_mode
+            print camera.awb_mode
+            print "self  : iso=%i shutter=%i" % (self._iso, self._shutter_speed)
+            print "camera: iso=%i shutter=%i" % (camera.iso, camera.shutter_speed)
+            print "sleeping to let AWB set..."
+            time.sleep(10)
+            print "capturing..."
             camera.capture(filename, quality=self._quality)
+            print "done."
             
     def capture_with_wait(self, filename, wait=2):
         with picamera.PiCamera() as camera:
@@ -109,6 +125,7 @@ class Campi():
     def set_cam_config(self,    resolution = None,
                                 iso = None,
                                 shutter_speed = None,
+                                framerate = None,
                                 brightness = None,
                                 contrast = None,
                                 sharpness = None,
@@ -124,6 +141,8 @@ class Campi():
             self._iso = iso        
         if not shutter_speed==None:
             self._shutter_speed = shutter_speed
+        if not framerate == None:
+            self._framerate = framerate
         if not brightness==None:
             self._brightness = brightness
         if not contrast==None:
@@ -187,6 +206,7 @@ class Campi():
             return
         cam.resolution = self._resolution
         cam.iso =  self._iso
+        cam.framerate = self._framerate   # set this before shutter_speed
         cam.shutter_speed = self._shutter_speed
         cam.brightness = self._brightness
         cam.constrast = self._contrast

@@ -234,8 +234,9 @@ class CameraCaptureHandler(tornado.web.RequestHandler):
     def get(self, ):
         file_name = 'test.jpg'
         update_camera()
-        #camera.capture(file_name)
-        camera.capture_with_wait(file_name)
+        camera.capture(file_name)
+        #camera.capture_with_wait(file_name)
+        #camera.capture_with_histogram(file_name)
         buf_size = 4096
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Disposition', 'attachment; filename=' + file_name)
