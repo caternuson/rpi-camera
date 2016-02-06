@@ -93,27 +93,15 @@ class Campi():
     #---------------------------------------------------------------
     def capture(self, filename):
         with picamera.PiCamera() as camera:
-            #TODO: clean this up after testing is done
-            self._framerate = Fraction(1 , 6)
-            self._exposure_mode = 'off'  # off ~= manual
-            self._awb_mode = 'auto'
             camera = self.__update_camera__(cam=camera)
-            print camera.framerate
-            print camera.exposure_mode
-            print camera.awb_mode
-            print "self  : iso=%i shutter=%i" % (self._iso, self._shutter_speed)
-            print "camera: iso=%i shutter=%i" % (camera.iso, camera.shutter_speed)
-            print "sleeping to let AWB set..."
-            time.sleep(10)
-            print "capturing..."
             camera.capture(filename, quality=self._quality)
-            print "done."
             
-    def capture_with_wait(self, filename, wait=2):
+    def capture_with_wait(self, filename, wait=None):
         with picamera.PiCamera() as camera:
             camera = self.__update_camera__(cam=camera)
-            camera.framerate = 30
             camera.start_preview()
+            if wait==None:
+                wait = 2.0*(1.0 / camera.framerate)
             time.sleep(wait)
             camera.capture(filename, quality=self._quality)
                                                              
@@ -140,9 +128,20 @@ class Campi():
         if not iso==None:
             self._iso = iso        
         if not shutter_speed==None:
-            self._shutter_speed = shutter_speed
+            # force framerate to a value that will support shutter_speed
+            if shutter_speed != 0:
+                self._exposure_mode = 'off'
+                self._framerate = Fraction(1.e6/shutter_speed)
+                self._shutter_speed = shutter_speed 
+            else:
+                self._exposure_mode = 'auto'
+                self._shutter_speed = shutter_speed          
         if not framerate == None:
-            self._framerate = framerate
+            # force framerate to a value that will support shutter_speed
+            if self._shutter_speed != 0:
+                self._framerate = Fraction(1.e6/self._shutter_speed)
+            else:
+               self._framerate = framerate 
         if not brightness==None:
             self._brightness = brightness
         if not contrast==None:
@@ -163,7 +162,8 @@ class Campi():
     def capture_with_histogram(self, filename, fill=False):
         # capture then open in PIL image
         hname = 'hist_' + time.strftime("%H%M%S", time.localtime()) + '.jpg'
-        self.capture_with_wait(hname)
+        #self.capture_with_wait(hname)
+        self.capture(hname)
         im_in   = Image.open(hname)
         im_out  = Image.new('RGBA', im_in.size)
         im_out.paste(im_in)
@@ -206,14 +206,14 @@ class Campi():
             return
         cam.resolution = self._resolution
         cam.iso =  self._iso
-        cam.framerate = self._framerate   # set this before shutter_speed
+        cam.framerate = self._framerate             # set this before shutter_speed
+        cam.exposure_mode = self._exposure_mode     # set this before shutter_speed
+        cam.awb_mode = self._awb_mode
         cam.shutter_speed = self._shutter_speed
         cam.brightness = self._brightness
         cam.constrast = self._contrast
         cam.sharpness = self._sharpness
         cam.saturation = self._saturation
-        cam.awb_mode = self._awb_mode
-        cam.exposure_mode = self._exposure_mode
         cam.hflip = self._hvflip[0]
         cam.vflip = self._hvflip[1]
         return cam
