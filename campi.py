@@ -95,6 +95,19 @@ class Campi():
         with picamera.PiCamera() as camera:
             camera = self.__update_camera__(cam=camera)
             camera.capture(filename, quality=self._quality)
+            settings = {}
+            settings['iso'] = camera.iso
+            settings['shutter_speed'] = camera.shutter_speed
+            settings['exposure_speed'] = camera.exposure_speed
+            settings['framerate'] = camera.framerate
+            settings['brightness'] = camera.brightness
+            settings['contrast'] = camera.contrast
+            settings['sharpness'] = camera.sharpness
+            settings['saturation'] = camera.saturation
+            settings['awb_mode'] = camera.awb_mode
+            settings['exposure_mode'] = camera.exposure_mode
+            settings['hvflip'] = (camera.hflip,camera.vflip)
+            return settings
             
     def capture_with_wait(self, filename, wait=None):
         with picamera.PiCamera() as camera:
@@ -163,7 +176,7 @@ class Campi():
         # capture then open in PIL image
         hname = 'hist_' + time.strftime("%H%M%S", time.localtime()) + '.jpg'
         #self.capture_with_wait(hname)
-        self.capture(hname)
+        settings = self.capture(hname)
         im_in   = Image.open(hname)
         im_out  = Image.new('RGBA', im_in.size)
         im_out.paste(im_in)
@@ -198,6 +211,20 @@ class Campi():
         draw.line(rl, fill='red', width=lw)
         draw.line(gl, fill='green', width=lw)
         draw.line(bl, fill='blue', width=lw)
+        
+        # add image info
+        font = ImageFont.truetype("5Identification-Mono.ttf",72)
+        (fw,fh) = font.getsize(" ")
+        lines = []
+        lines.append("EXP_MODE %s" % settings['exposure_mode'])
+        lines.append("EXP_SPEED %f" % (settings['exposure_speed'] / 1.e6))
+        lines.append("ISO %d" % settings['iso'])
+        N = 0
+        for line in lines:
+            draw.text((10,10+N*fh), line, font=font)
+            N += 1
+
+        # save it and clean up 
         im_out.save(filename, quality=95)
         os.remove(hname)
             

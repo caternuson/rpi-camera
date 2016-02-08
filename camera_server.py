@@ -179,8 +179,8 @@ def start_timelapse():
             #filename = timelapse_name+"_%04d.png" % image_count
             print("[{0}/{1}]:{2}".format(image_count,total_imgs,filename))
             acquire_start = time.time() 
-            #camera.capture(filename)
-            camera.capture_with_wait(filename)
+            camera.capture(filename)
+            #camera.capture_with_wait(filename)
             acquire_finish = time.time()
             acquire_time = acquire_finish - acquire_start
             # Pause
