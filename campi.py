@@ -56,7 +56,8 @@ BIG_MSG         = (0,12)
 
 class Campi():
         
-    def __init__(self):          
+    def __init__(self):
+        self._sensor_mode = 2               # 0 (auto), 2 (1-15fps), 3 (0.1666-1fps) (see doc)
         self._resolution = (2592,1944)      # full resolution 2592 x 1944
         self._iso = 0                       # 0(auto), 100, 200, 320, 400, 500, 640, 800
         self._shutter_speed = 0             # 0(auto), value in microseconds
@@ -92,8 +93,10 @@ class Campi():
     # Raspberry Pi Camera functions
     #---------------------------------------------------------------
     def capture(self, filename):
-        with picamera.PiCamera() as camera:
+        with picamera.PiCamera(sensor_mode=2) as camera:
+            print "updating camera..."
             camera = self.__update_camera__(cam=camera)
+            print "capturing image..."
             camera.capture(filename, quality=self._quality)
             settings = {}
             settings['iso'] = camera.iso
@@ -110,18 +113,26 @@ class Campi():
             return settings
             
     def capture_with_wait(self, filename, wait=None):
+        return None
+        # TODO: deprecate this thing
+        '''
         with picamera.PiCamera() as camera:
             camera = self.__update_camera__(cam=camera)
             camera.start_preview()
-            if wait==None:
+            if wait == None:
                 wait = 2.0*(1.0 / camera.framerate)
             time.sleep(wait)
             camera.capture(filename, quality=self._quality)
+        '''
                                                              
-    def capture_stream(self, ios):
-        with picamera.PiCamera() as camera:
-            camera = self.__update_camera__(cam=camera)
-            camera.capture(ios, 'jpeg', use_video_port=True, resize=(400,225))
+    def capture_stream(self, ios=None, size=None):
+        if ios == None:
+            return
+        if size == None:
+            size = (400,225)
+        with picamera.PiCamera(sensor_mode=5) as camera:
+            camera = self.__update_camera__(cam=camera, use_video_port=True)
+            camera.capture(ios, 'jpeg', use_video_port=True, resize=size)
                     
     def set_cam_config(self,    resolution = None,
                                 iso = None,
@@ -141,17 +152,27 @@ class Campi():
         if not iso==None:
             self._iso = iso        
         if not shutter_speed==None:
-            # force framerate to a value that will support shutter_speed
             if shutter_speed != 0:
-                self._exposure_mode = 'off'
-                self._framerate = Fraction(1.e6/shutter_speed)
-                self._shutter_speed = shutter_speed 
+                # force settings to support non-zero (non-auto) shutter_speed
+                self._exposure_mode = 'off'                     # shutter speed ignored otherwise
+                if shutter_speed > 6000000:                     # global max is 6 secs
+                    shutter_speed = 6000000
+                if shutter_speed > 1000000:                     # sensor mode 2 or 3 for stills
+                    self._sensor_mode = 3                       # 6 secs max (0.1666-1fps)
+                    self._framerate = min(Fraction(1),Fraction(1.e6/shutter_speed))
+                else:
+                    self._sensor_mode = 2                       # 1 sec max (1-15fps)
+                    self._framerate = min(Fraction(15),Fraction(1.e6/shutter_speed))
+                self._shutter_speed = shutter_speed             # and finally, set shutter speed
+                print self._framerate, float(self._framerate)
+                print self._shutter_speed
+                print self._sensor_mode
             else:
                 self._exposure_mode = 'auto'
                 self._shutter_speed = shutter_speed          
         if not framerate == None:
-            # force framerate to a value that will support shutter_speed
             if self._shutter_speed != 0:
+                # force framerate to a value that will support shutter_speed
                 self._framerate = Fraction(1.e6/self._shutter_speed)
             else:
                self._framerate = framerate 
@@ -228,13 +249,14 @@ class Campi():
         im_out.save(filename, quality=95)
         os.remove(hname)
             
-    def __update_camera__(self, cam=None):
+    def __update_camera__(self, cam=None, use_video_port=False):
         if cam==None:
             return
-        cam.resolution = self._resolution
-        cam.iso =  self._iso
+        cam.sensor_mode = self._sensor_mode
         cam.framerate = self._framerate             # set this before shutter_speed
         cam.exposure_mode = self._exposure_mode     # set this before shutter_speed
+        cam.resolution = self._resolution
+        cam.iso =  self._iso
         cam.awb_mode = self._awb_mode
         cam.shutter_speed = self._shutter_speed
         cam.brightness = self._brightness
@@ -243,6 +265,9 @@ class Campi():
         cam.saturation = self._saturation
         cam.hflip = self._hvflip[0]
         cam.vflip = self._hvflip[1]
+        if use_video_port:
+            cam.framerate = Fraction(30,1)
+            cam.exposure_mode = 'auto'
         return cam
     
     #---------------------------------------------------------------
