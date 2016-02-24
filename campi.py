@@ -93,12 +93,12 @@ class Campi():
     # Raspberry Pi Camera functions
     #---------------------------------------------------------------
     def capture(self, filename):
+        settings = {}
         with picamera.PiCamera(sensor_mode=2) as camera:
             print "updating camera..."
             camera = self.__update_camera__(cam=camera)
             print "capturing image..."
             camera.capture(filename, quality=self._quality)
-            settings = {}
             settings['iso'] = camera.iso
             settings['shutter_speed'] = camera.shutter_speed
             settings['exposure_speed'] = camera.exposure_speed
@@ -110,7 +110,7 @@ class Campi():
             settings['awb_mode'] = camera.awb_mode
             settings['exposure_mode'] = camera.exposure_mode
             settings['hvflip'] = (camera.hflip,camera.vflip)
-            return settings
+        return settings
             
     def capture_with_wait(self, filename, wait=None):
         return None
@@ -164,13 +164,10 @@ class Campi():
                     self._sensor_mode = 2                       # 1 sec max (1-15fps)
                     self._framerate = min(Fraction(15),Fraction(1.e6/shutter_speed))
                 self._shutter_speed = shutter_speed             # and finally, set shutter speed
-                print self._framerate, float(self._framerate)
-                print self._shutter_speed
-                print self._sensor_mode
             else:
                 self._exposure_mode = 'auto'
                 self._shutter_speed = shutter_speed          
-        if not framerate == None:
+        if not framerate==None:
             if self._shutter_speed != 0:
                 # force framerate to a value that will support shutter_speed
                 self._framerate = Fraction(1.e6/self._shutter_speed)
