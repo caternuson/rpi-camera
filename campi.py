@@ -59,17 +59,17 @@ class Campi():
     def __init__(self):
         self._sensor_mode = 2               # 0 (auto), 2 (1-15fps), 3 (0.1666-1fps) (see doc)
         self._resolution = (2592,1944)      # full resolution 2592 x 1944
-        self._iso = 0                       # 0(auto), 100, 200, 320, 400, 500, 640, 800
-        self._shutter_speed = 0             # 0(auto), value in microseconds
+        self._iso = 0                       # 0 (auto), 100, 200, 320, 400, 500, 640, 800
+        self._shutter_speed = 0             # 0 (auto), value in microseconds
         self._framerate = Fraction(30,1)    # NOTE: this limits max shutter speed
         self._brightness = 50               # 0 - 100 (50)
         self._contrast = 0                  # -100 - 100 (0)
         self._sharpness = 0                 # -100 - 100 (0)
         self._saturation = 0                # -100 - 100 (0)
-        self._awb_mode = 'auto'             # auto white balance mode (see doc)
+        self._awb_mode = 'auto'             # white balance mode (see doc)
         self._exposure_mode = 'auto'        # exposure mode (see doc)
         self._hvflip = (True, True)         # horizontal/vertical flip
-        self._quality = 100                 # 0 - 100,  applies only to JPGs
+        self._quality = 100                 # 0 - 100, applies only to JPGs
         self._awb_gains = None
  
         self._disp = LCD.PCD8544(LCD_DC,
@@ -155,7 +155,7 @@ class Campi():
             if shutter_speed != 0:
                 # force settings to support non-zero (non-auto) shutter_speed
                 self._exposure_mode = 'off'                     # shutter speed ignored otherwise
-                if shutter_speed > 6000000:                     # global max is 6 secs
+                if shutter_speed > 6000000:                     # gl#obal max is 6 secs
                     shutter_speed = 6000000
                 if shutter_speed > 1000000:                     # sensor mode 2 or 3 for stills
                     self._sensor_mode = 3                       # 6 secs max (0.1666-1fps)
@@ -198,16 +198,26 @@ class Campi():
         im_in   = Image.open(hname)
         im_out  = Image.new('RGBA', im_in.size)
         im_out.paste(im_in)
+        (width, height) = im_in.size
+        draw = ImageDraw.Draw(im_out)
+
+        # add rule of thirds lines
+        x1 = width/3
+        x2 = 2*x1
+        y1 = height/3
+        y2 = 2*y1
+        draw.line([(x1,0),(x1,height)], width=3)
+        draw.line([(x2,0),(x2,height)], width=3)
+        draw.line([(0,y1),(width,y1)], width=3)
+        draw.line([(0,y2),(width,y2)], width=3)
         
         # compute histogram, scaled for image size
         hist = im_in.histogram()
         rh = hist[0:256]
         gh = hist[256:512]
         bh = hist[512:768]
-        (width, height) = im_in.size
         xs = float(width)/float(256)
         ys = float(height)/float(max(hist))
-
         rl=[]
         gl=[]
         bl=[]
@@ -218,7 +228,6 @@ class Campi():
         
         # draw it
         lw = max(5,int((0.005*max(im_out.size))))
-        draw = ImageDraw.Draw(im_out)
         if (fill):
             rpoly = [(0,height)] + rl + [(width,height)]
             gpoly = [(0,height)] + gl + [(width,height)]

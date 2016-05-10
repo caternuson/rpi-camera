@@ -38,17 +38,17 @@ ISO = 100                                   # default ISO
 shutter = 0                                 # default shutter speed
 camera.set_cam_config(  resolution=(1920, 1080),
                         quality=100,
-                        brightness = 50,
-                        contrast = 5,
-                        sharpness = 0,
-                        saturation = 10,
+                        brightness = 50,    # 0 - 100 (50)
+                        contrast = 0,       # -100 - 100 (0)
+                        sharpness = 0,      # -100 - 100 (0)
+                        saturation = 0,     # -100 - 100 (0)
                         awb_mode = 'auto',
                         iso=ISO,
                         shutter_speed=shutter)
 
 # Default time lapse config
 delta_time = 10                             # delta time in seconds
-total_imgs = 4                           # total number of images
+total_imgs = 4                              # total number of images
 total_time = delta_time * (total_imgs-1)    # total time in seconds
 
 #-------------------------------------------------------------------------
