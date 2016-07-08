@@ -39,12 +39,10 @@ LCD_SPI_DEVICE      =   0       # Hardware SPI device (determines chip select pi
 LCD_LED             =   22      # LCD LED enable pin (HIGH=ON, LOW=OFF)
 LCD_CONTRAST        =   50      # LCD contrast 0-100
 
-# Root directory where app was launched
-ROOT_DIR = os.getcwd()
 
 # Load fonts
-font_small = ImageFont.load_default()
-font_large = ImageFont.truetype("5Identification-Mono.ttf",12)
+FONT_SMALL = ImageFont.load_default()
+FONT_LARGE = ImageFont.truetype("5Identification-Mono.ttf",12)
 
 # Image draw buffer for writing to LCD display
 disp_image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
@@ -55,8 +53,10 @@ WHOLE_SCREEN    = ((0,0),(LCD.LCDWIDTH, LCD.LCDHEIGHT))
 BIG_MSG         = (0,12)         
 
 class Campi():
+    '''A class to provide an interface to the campi hardware.'''
         
     def __init__(self):
+        '''Constructor.'''
         self._sensor_mode = 2               # 0 (auto), 2 (1-15fps), 3 (0.1666-1fps) (see doc)
         self._resolution = (2592,1944)      # full resolution 2592 x 1944
         self._iso = 0                       # 0 (auto), 100, 200, 320, 400, 500, 640, 800
@@ -88,11 +88,12 @@ class Campi():
         for B in BUTTONS:
             GPIO.setup(B, GPIO.IN , pull_up_down=GPIO.PUD_UP)
         GPIO.setup(LCD_LED, GPIO.OUT, initial=GPIO.LOW)
-        
+  
     #---------------------------------------------------------------
-    # Raspberry Pi Camera functions
-    #---------------------------------------------------------------
+    #                   C  A  M  E  R  A
+    #---------------------------------------------------------------        
     def capture(self, filename):
+        '''Capture an image and save to the specified filename.'''
         settings = {}
         with picamera.PiCamera(sensor_mode=2) as camera:
             print "updating camera..."
@@ -111,25 +112,12 @@ class Campi():
             settings['exposure_mode'] = camera.exposure_mode
             settings['hvflip'] = (camera.hflip,camera.vflip)
         return settings
-            
-    def capture_with_wait(self, filename, wait=None):
-        return None
-        # TODO: deprecate this thing
-        '''
-        with picamera.PiCamera() as camera:
-            camera = self.__update_camera__(cam=camera)
-            camera.start_preview()
-            if wait == None:
-                wait = 2.0*(1.0 / camera.framerate)
-            time.sleep(wait)
-            camera.capture(filename, quality=self._quality)
-        '''
-                                                             
-    def capture_stream(self, ios=None, size=None):
+                                                                   
+    def capture_stream(self, ios=None, size=(400,225)):
+        '''Capture an image to the specified IO stream. Image size can
+        also be specified.'''
         if ios == None:
             return
-        if size == None:
-            size = (400,225)
         with picamera.PiCamera(sensor_mode=5) as camera:
             camera = self.__update_camera__(cam=camera, use_video_port=True)
             camera.capture(ios, 'jpeg', use_video_port=True, resize=size)
@@ -147,6 +135,7 @@ class Campi():
                                 hvflip = None,
                                 quality = None,
                                 ):
+        '''Set the camera configuration.'''
         if not resolution==None:
             self._resolution = resolution
         if not iso==None:
@@ -191,6 +180,9 @@ class Campi():
             self._quality = quality
             
     def capture_with_histogram(self, filename, fill=False):
+        '''Capture an image with histogram overlay and save to specified file.
+        If fill=True, the area under the histogram curves will be filled.
+        '''
         # capture then open in PIL image
         hname = 'hist_' + time.strftime("%H%M%S", time.localtime()) + '.jpg'
         #self.capture_with_wait(hname)
@@ -256,6 +248,7 @@ class Campi():
         os.remove(hname)
             
     def __update_camera__(self, cam=None, use_video_port=False):
+        '''Update the Raspberry Pi Camera Module with the current settings.'''
         if cam==None:
             return
         cam.sensor_mode = self._sensor_mode
@@ -277,26 +270,34 @@ class Campi():
         return cam
     
     #---------------------------------------------------------------
-    # Nokia LCD Display functions
+    #                  D  I  S  P  L  A  Y
     #---------------------------------------------------------------
     def LCD_LED_On(self):
+        '''Enable power to LCD display.'''
         self._gpio.output(RpiCamera.LCD_LED, GPIO.HIGH)
         
     def LCD_LED_Off(self):
+        '''Disable power to LCD display.'''
         self._gpio.output(RpiCamera.LCD_LED, GPIO.LOW)
         
     def disp_clear(self):
+        '''Clear the display.'''
         self._disp.clear()
         self._disp.display()
     
     def disp_image(self, image):
+        '''Display the supplied image.'''
         self._disp.image(image)
         self._disp.display()
         
     def get_lcd_size(self):
+        '''Return the width and height of the LCD screen as a tuple.'''
         return (LCD.LCDWIDTH, LCD.LCDHEIGHT)
     
-    def disp_msg(self, msg, font=font_small):
+    def disp_msg(self, msg, font=FONT_SMALL):
+        '''Display the supplied message on the screen. An optional
+        font can be supplied.
+        '''
         (fw,fh) = font.getsize(" ")  # font width and height
         cx = LCD.LCDWIDTH / fw       # max characters per line
         cy = LCD.LCDHEIGHT / fh      # max number of lines
@@ -306,20 +307,23 @@ class Campi():
         disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
         y = 0
         for line in lines:
-            disp_draw.text((0,y), line, font=font_small)
+            disp_draw.text((0,y), line, font=FONT_SMALL)
             y += fh
         self.disp_image(disp_image)
         
     def disp_big_msg(self, msg, location=BIG_MSG):
-        # Display a message using large font
+        '''Display the supplied message on the screen using large text.
+        An optional location can be specified.
+        '''
         disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
-        disp_draw.text(location, msg, font=font_large)
+        disp_draw.text(location, msg, font=FONT_LARGE)
         self.disp_image(disp_image)
                
     #---------------------------------------------------------------
-    # Button functions
+    #                  B  U  T  T  O  N  S
     #---------------------------------------------------------------
     def __get_raw_button(self, btn=None):
+        '''Return the state of all buttons or specified button.'''
         if (btn==None):
             return (self._gpio.input(BTN_UP),
                     self._gpio.input(BTN_DOWN),
@@ -332,6 +336,7 @@ class Campi():
             return None
             
     def is_pressed(self, btn=None):
+        '''Return True if specified button is pressed. False otherwise.'''
         if (btn in BUTTONS):
             if (self.__get_raw_button(btn)==0):
                 return True
@@ -341,13 +346,14 @@ class Campi():
             return None
         
     def get_buttons(self, ):
+        '''Return an array of button state.'''
         state = {}
         for B in BUTTONS:
             state[B] = self.is_pressed(B)
         return state
    
 #--------------------------------------------------------------------
-# MAIN 
+# M A I N 
 #--------------------------------------------------------------------
 if __name__ == '__main__':
     print "I'm just a class, nothing to do..."
