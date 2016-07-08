@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #===========================================================================
 # campi.py
 #
@@ -11,8 +11,11 @@
 # 2014-10-30
 # Carter Nelson
 #===========================================================================
-import io, os, time
+import io
+import os
+import time
 from fractions import Fraction
+
 import Image
 import ImageDraw
 import ImageFont
@@ -21,7 +24,7 @@ import RPi.GPIO as GPIO
 import Adafruit_Nokia_LCD as LCD
 import Adafruit_GPIO.SPI as SPI
 
-import picamera
+from picamera import PiCamera
 
 # GPIO pins for 5 way navigation switch
 BTN_UP              =   19      # Up
@@ -39,14 +42,13 @@ LCD_SPI_DEVICE      =   0       # Hardware SPI device (determines chip select pi
 LCD_LED             =   22      # LCD LED enable pin (HIGH=ON, LOW=OFF)
 LCD_CONTRAST        =   50      # LCD contrast 0-100
 
-
 # Load fonts
 FONT_SMALL = ImageFont.load_default()
 FONT_LARGE = ImageFont.truetype("5Identification-Mono.ttf",12)
 
 # Image draw buffer for writing to LCD display
-disp_image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
-disp_draw  = ImageDraw.Draw(disp_image)
+LCD_IMAGE = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
+LCD_DRAW  = ImageDraw.Draw(LCD_IMAGE)
 
 # Display locations
 WHOLE_SCREEN    = ((0,0),(LCD.LCDWIDTH, LCD.LCDHEIGHT))
@@ -57,20 +59,21 @@ class Campi():
         
     def __init__(self):
         '''Constructor.'''
-        self._sensor_mode = 2               # 0 (auto), 2 (1-15fps), 3 (0.1666-1fps) (see doc)
-        self._resolution = (2592,1944)      # full resolution 2592 x 1944
-        self._iso = 0                       # 0 (auto), 100, 200, 320, 400, 500, 640, 800
-        self._shutter_speed = 0             # 0 (auto), value in microseconds
-        self._framerate = Fraction(30,1)    # NOTE: this limits max shutter speed
-        self._brightness = 50               # 0 - 100 (50)
-        self._contrast = 0                  # -100 - 100 (0)
-        self._sharpness = 0                 # -100 - 100 (0)
-        self._saturation = 0                # -100 - 100 (0)
-        self._awb_mode = 'auto'             # white balance mode (see doc)
-        self._exposure_mode = 'auto'        # exposure mode (see doc)
-        self._hvflip = (True, True)         # horizontal/vertical flip
-        self._quality = 100                 # 0 - 100, applies only to JPGs
-        self._awb_gains = None
+        self.settings = {}
+        self.settings['sensor_mode'] = 0               # 0 (auto), 2 (1-15fps), 3 (0.1666-1fps) (see doc)
+        self.settings['resolution'] = (2592,1944)      # full resolution 2592 x 1944
+        self.settings['iso'] = 0                       # 0 (auto), 100, 200, 320, 400, 500, 640, 800
+        self.settings['shutter_speed'] = 0             # 0 (auto), value in microseconds
+        self.settings['framerate'] = Fraction(30,1)    # NOTE: this limits max shutter speed
+        self.settings['brightness'] = 50               # 0 - 100 (50)
+        self.settings['contrast'] = 0                  # -100 - 100 (0)
+        self.settings['sharpness'] = 0                 # -100 - 100 (0)
+        self.settings['saturation'] = 0                # -100 - 100 (0)
+        self.settings['awb_mode'] = 'auto'             # white balance mode (see doc)
+        self.settings['exposure_mode'] = 'auto'        # exposure mode (see doc)
+        self.settings['hvflip'] = (True, True)         # horizontal/vertical flip
+        self.settings['quality'] = 100                 # 0 - 100, applies only to JPGs
+        self.settings['awb_gains'] = None
  
         self._disp = LCD.PCD8544(LCD_DC,
                                  LCD_RST,
@@ -93,91 +96,22 @@ class Campi():
     #                   C  A  M  E  R  A
     #---------------------------------------------------------------        
     def capture(self, filename):
-        '''Capture an image and save to the specified filename.'''
-        settings = {}
-        with picamera.PiCamera(sensor_mode=2) as camera:
-            print "updating camera..."
-            camera = self.__update_camera__(cam=camera)
-            print "capturing image..."
-            camera.capture(filename, quality=self._quality)
-            settings['iso'] = camera.iso
-            settings['shutter_speed'] = camera.shutter_speed
-            settings['exposure_speed'] = camera.exposure_speed
-            settings['framerate'] = camera.framerate
-            settings['brightness'] = camera.brightness
-            settings['contrast'] = camera.contrast
-            settings['sharpness'] = camera.sharpness
-            settings['saturation'] = camera.saturation
-            settings['awb_mode'] = camera.awb_mode
-            settings['exposure_mode'] = camera.exposure_mode
-            settings['hvflip'] = (camera.hflip,camera.vflip)
-        return settings
+        '''Capture an image using current settings and save to the specified
+        filename.
+        '''
+        with PiCamera(sensor_mode=self.settings['sensor_mode']) as camera:
+            camera = self.__update_camera(camera=camera)
+            camera.capture(filename, quality=self.settings['quality'])
+            self.__update_settings(camera)
                                                                    
     def capture_stream(self, ios=None, size=(400,225)):
         '''Capture an image to the specified IO stream. Image size can
         also be specified.'''
         if ios == None:
             return
-        with picamera.PiCamera(sensor_mode=5) as camera:
-            camera = self.__update_camera__(cam=camera, use_video_port=True)
+        with PiCamera(sensor_mode=5) as camera:
+            camera = self.__update_camera__(camera=camera, use_video_port=True)
             camera.capture(ios, 'jpeg', use_video_port=True, resize=size)
-                    
-    def set_cam_config(self,    resolution = None,
-                                iso = None,
-                                shutter_speed = None,
-                                framerate = None,
-                                brightness = None,
-                                contrast = None,
-                                sharpness = None,
-                                saturation = None,
-                                awb_mode = None,
-                                exposure_mode = None,
-                                hvflip = None,
-                                quality = None,
-                                ):
-        '''Set the camera configuration.'''
-        if not resolution==None:
-            self._resolution = resolution
-        if not iso==None:
-            self._iso = iso        
-        if not shutter_speed==None:
-            if shutter_speed != 0:
-                # force settings to support non-zero (non-auto) shutter_speed
-                self._exposure_mode = 'off'                     # shutter speed ignored otherwise
-                if shutter_speed > 6000000:                     # gl#obal max is 6 secs
-                    shutter_speed = 6000000
-                if shutter_speed > 1000000:                     # sensor mode 2 or 3 for stills
-                    self._sensor_mode = 3                       # 6 secs max (0.1666-1fps)
-                    self._framerate = min(Fraction(1),Fraction(1.e6/shutter_speed))
-                else:
-                    self._sensor_mode = 2                       # 1 sec max (1-15fps)
-                    self._framerate = min(Fraction(15),Fraction(1.e6/shutter_speed))
-                self._shutter_speed = shutter_speed             # and finally, set shutter speed
-            else:
-                self._exposure_mode = 'auto'
-                self._shutter_speed = shutter_speed          
-        if not framerate==None:
-            if self._shutter_speed != 0:
-                # force framerate to a value that will support shutter_speed
-                self._framerate = Fraction(1.e6/self._shutter_speed)
-            else:
-               self._framerate = framerate 
-        if not brightness==None:
-            self._brightness = brightness
-        if not contrast==None:
-            self._contrast = contrast
-        if not sharpness==None:
-            self._sharpness = sharpness
-        if not saturation==None:
-            self._saturation = saturation
-        if not awb_mode==None:
-            self._awb_mode = awb_mode
-        if not exposure_mode==None:
-            self._exposure_mode = exposure_mode
-        if not hvflip==None:
-            self._hvflip = hvflip
-        if not quality==None:
-            self._quality = quality
             
     def capture_with_histogram(self, filename, fill=False):
         '''Capture an image with histogram overlay and save to specified file.
@@ -185,12 +119,11 @@ class Campi():
         '''
         # capture then open in PIL image
         hname = 'hist_' + time.strftime("%H%M%S", time.localtime()) + '.jpg'
-        #self.capture_with_wait(hname)
-        settings = self.capture(hname)
+        self.capture(hname)
         im_in   = Image.open(hname)
         im_out  = Image.new('RGBA', im_in.size)
         im_out.paste(im_in)
-        (width, height) = im_in.size
+        width, height = im_in.size
         draw = ImageDraw.Draw(im_out)
 
         # add rule of thirds lines
@@ -233,11 +166,11 @@ class Campi():
         
         # add image info
         font = ImageFont.truetype("5Identification-Mono.ttf",72)
-        (fw,fh) = font.getsize(" ")
+        fw,fh = font.getsize(" ")
         lines = []
-        lines.append("EXP_MODE %s" % settings['exposure_mode'])
-        lines.append("EXP_SPEED %f" % (settings['exposure_speed'] / 1.e6))
-        lines.append("ISO %d" % settings['iso'])
+        lines.append("MODE %s" % self.settings['exposure_mode'])
+        lines.append("SPEED %f" % (self.settings['exposure_speed'] / 1.e6))
+        lines.append("ISO %d" % self.settings['iso'])
         N = 0
         for line in lines:
             draw.text((10,10+N*fh), line, font=font)
@@ -246,39 +179,119 @@ class Campi():
         # save it and clean up 
         im_out.save(filename, quality=95)
         os.remove(hname)
-            
-    def __update_camera__(self, cam=None, use_video_port=False):
-        '''Update the Raspberry Pi Camera Module with the current settings.'''
-        if cam==None:
+        
+    def set_cam_config(self, setting=None, value=None):
+        '''Set the specified camera setting to the supplied value.'''
+        if value == None:
             return
-        cam.sensor_mode = self._sensor_mode
-        cam.framerate = self._framerate             # set this before shutter_speed
-        cam.exposure_mode = self._exposure_mode     # set this before shutter_speed
-        cam.resolution = self._resolution
-        cam.iso =  self._iso
-        cam.awb_mode = self._awb_mode
-        cam.shutter_speed = self._shutter_speed
-        cam.brightness = self._brightness
-        cam.constrast = self._contrast
-        cam.sharpness = self._sharpness
-        cam.saturation = self._saturation
-        cam.hflip = self._hvflip[0]
-        cam.vflip = self._hvflip[1]
+        if setting not in self.settings:
+            return
+        if "shutter_speed" == setting:
+            self.__set_shutter_speed(value)
+            return
+        if "framerate" == setting:
+            self.__set_framerate(value)
+            return
+        self.settings[setting] = value
+        
+    def __set_shutter_speed(self, value=None):
+        '''Setting shutter speed manually requires some effort. The acceptable
+        values are limited by the sensor_mode and frame_rate. Here, those values
+        are altered as needed to support the specified shutter speed.
+        '''
+        if value == None:
+            return
+        if value != 0:
+            # force settings to support non-zero (non-auto) shutter_speed
+            self.settings['exposure_mode'] = 'off'      # shutter speed ignored otherwise
+            if value > 6000000:                         # global max is 6 secs
+                value = 6000000
+            if value > 1000000:                         # sensor mode 2 or 3 for stills
+                self.settings['sensor_mode'] = 3        # 6 secs max (0.1666-1fps)
+                self.settings['framerate'] = min(Fraction(1),Fraction(1.e6/value))
+            else:
+                self.settings['sensor_mode'] = 2        # 1 sec max (1-15fps)
+                self.settings['framerate'] = min(Fraction(15),Fraction(1.e6/value))
+            self.settings['shutter_speed'] = value      # and finally, set shutter speed
+        else:
+            # auto mode
+            self.settings['sensor_mode'] = 0
+            self.settings['exposure_mode'] = 'auto'
+            self.settings['shutter_speed'] = value
+            
+    def __set_framerate(self, value=None):
+        '''Framerate is tied to shutter_speed. Priority is given to shutter
+        speed if in manual mode.
+        '''
+        if self.settings['shutter_speed'] != 0:
+            # force framerate to a value that will support shutter_speed
+            self.settings['framerate'] = Fraction(1.e6/self.settings['shutter_speed'])
+        else:
+            # auto mode, so just set it
+            self.settings['framerate'] = value 
+            
+    def __update_camera(self, camera=None, use_video_port=False):
+        '''Update the Raspberry Pi Camera Module with the current settings.
+        Basically a mapping of this class's member variables to the ones used
+        by the picamera module.
+        '''
+        if not isinstance(camera, PiCamera):
+            return
+        #---[from http://picamera.readthedocs.io]--
+        # At the time of writing, setting this property does nothing unless the
+        # camera has been initialized with a sensor mode other than 0.
+        # Furthermore, some mode transitions appear to require setting the
+        # property twice (in a row). This appears to be a firmware limitation.
+        #---
+        '''
+        camera.sensor_mode = self.settings['sensor_mode']
+        '''
+        camera.framerate = self.settings['framerate']             # set this before shutter_speed
+        camera.exposure_mode = self.settings['exposure_mode']     # set this before shutter_speed
+        camera.resolution = self.settings['resolution']
+        camera.iso =  self.settings['iso']
+        camera.awb_mode = self.settings['awb_mode']
+        camera.shutter_speed = self.settings['shutter_speed']
+        camera.brightness = self.settings['brightness']
+        camera.constrast = self.settings['contrast']
+        camera.sharpness = self.settings['sharpness']
+        camera.saturation = self.settings['saturation']
+        camera.hflip = self.settings['hvflip'][0]
+        camera.vflip = self.settings['hvflip'][1]
         if use_video_port:
-            cam.framerate = Fraction(30,1)
-            cam.exposure_mode = 'auto'
-        return cam
+            camera.framerate = Fraction(30,1)
+            camera.exposure_mode = 'auto'
+        return camera
+    
+    def __update_settings(self, camera=None):
+        '''Update dictionary of settings with actual values from supplied
+        camera object.'''
+        if not isinstance(camera, PiCamera):
+            return
+        self.settings['sensor_mode'] = camera.sensor_mode
+        self.settings['framerate'] = camera.framerate
+        self.settings['exposure_mode'] = camera.exposure_mode
+        self.settings['resolution'] = camera.resolution
+        self.settings['iso'] = camera.iso
+        self.settings['awb_mode'] = camera.awb_mode
+        self.settings['shutter_speed'] = camera.shutter_speed
+        self.settings['exposure_speed'] = camera.exposure_speed
+        self.settings['brightness'] = camera.brightness
+        self.settings['contrast'] = camera.contrast
+        self.settings['sharpness'] = camera.sharpness
+        self.settings['saturation'] = camera.saturation
+        self.settings['hvflip'] = (camera.hflip,camera.vflip)            
     
     #---------------------------------------------------------------
     #                  D  I  S  P  L  A  Y
     #---------------------------------------------------------------
     def LCD_LED_On(self):
         '''Enable power to LCD display.'''
-        self._gpio.output(RpiCamera.LCD_LED, GPIO.HIGH)
+        self._gpio.output(LCD_LED, GPIO.HIGH)
         
     def LCD_LED_Off(self):
         '''Disable power to LCD display.'''
-        self._gpio.output(RpiCamera.LCD_LED, GPIO.LOW)
+        self._gpio.output(LCD_LED, GPIO.LOW)
         
     def disp_clear(self):
         '''Clear the display.'''
@@ -298,26 +311,26 @@ class Campi():
         '''Display the supplied message on the screen. An optional
         font can be supplied.
         '''
-        (fw,fh) = font.getsize(" ")  # font width and height
+        fw,fh = font.getsize(" ")    # font width and height
         cx = LCD.LCDWIDTH / fw       # max characters per line
         cy = LCD.LCDHEIGHT / fh      # max number of lines
 
         lines = [ msg[i:i+cx] for i in range(0, len(msg), cx) ]
         
-        disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+        LCD_DRAW.rectangle(WHOLE_SCREEN, outline=255, fill=255)
         y = 0
         for line in lines:
-            disp_draw.text((0,y), line, font=FONT_SMALL)
+            LCD_DRAW.text((0,y), line, font=FONT_SMALL)
             y += fh
-        self.disp_image(disp_image)
+        self.disp_image(LCD_IMAGE)
         
     def disp_big_msg(self, msg, location=BIG_MSG):
         '''Display the supplied message on the screen using large text.
         An optional location can be specified.
         '''
-        disp_draw.rectangle(WHOLE_SCREEN, outline=255, fill=255)
-        disp_draw.text(location, msg, font=FONT_LARGE)
-        self.disp_image(disp_image)
+        LCD_DRAW.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+        LCD_DRAW.text(location, msg, font=FONT_LARGE)
+        self.disp_image(LCD_IMAGE)
                
     #---------------------------------------------------------------
     #                  B  U  T  T  O  N  S
@@ -346,7 +359,7 @@ class Campi():
             return None
         
     def get_buttons(self, ):
-        '''Return an array of button state.'''
+        '''Return a dictionary of button state.'''
         state = {}
         for B in BUTTONS:
             state[B] = self.is_pressed(B)
