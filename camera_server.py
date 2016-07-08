@@ -16,6 +16,7 @@ import os
 import time
 import cStringIO as io
 import base64
+
 import Image
 import ImageDraw
 import ImageFont
@@ -36,15 +37,9 @@ PORT = 8008
 camera = campi.Campi()
 ISO = 100                                   # default ISO
 shutter = 0                                 # default shutter speed
-camera.set_cam_config(  resolution=(1920, 1080),
-                        quality=100,
-                        brightness = 50,    # 0 - 100 (50)
-                        contrast = 0,       # -100 - 100 (0)
-                        sharpness = 0,      # -100 - 100 (0)
-                        saturation = 0,     # -100 - 100 (0)
-                        awb_mode = 'auto',
-                        iso=ISO,
-                        shutter_speed=shutter)
+camera.set_cam_config("resolution",(1920, 1080))
+camera.set_cam_config("shutter_speed", shutter)
+camera.set_cam_config("iso", ISO)
 
 # Default time lapse config
 delta_time = 10                             # delta time in seconds
@@ -294,7 +289,7 @@ class CameraSetUpHandler(tornado.web.RequestHandler):
         print "GET Request from {}".format(self.request.remote_ip)
         disp_show_summary()
         kwargs = self.__build_kwargs__()
-        self.render('camera_setup.html', **kwargs)
+        self.render('timelapse.html', **kwargs)
         
     def post(self):
         print "POST Request from {}".format(self.request.remote_ip)
