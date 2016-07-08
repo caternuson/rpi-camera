@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #===========================================================================
 # boot_menu.py
 #
@@ -9,9 +9,10 @@
 # 2014-4-23
 # Carter Nelson
 #===========================================================================
-import campi
 import time
 import os
+
+import campi
 
 camera = campi.Campi()
 
@@ -82,7 +83,7 @@ while True:
             os.system('python /home/pi/rpi-camera/camera_server.py')
         if (selection==3):
             # start non-wifi menu driven time lapse
-            os.system('python /home/pi/rpi-camera/camera_timelapse.py')
+            os.system('python /home/pi/rpi-camera/timelapse_basic.py')
         if (selection==4):
             # do nothing, just exit
             pass
