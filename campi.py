@@ -11,17 +11,17 @@
 # 2014-10-30
 # Carter Nelson
 #===========================================================================
-import picamera
+import io, os, time
+from fractions import Fraction
+import Image
+import ImageDraw
+import ImageFont
+
 import RPi.GPIO as GPIO
 import Adafruit_Nokia_LCD as LCD
 import Adafruit_GPIO.SPI as SPI
 
-import Image
-import ImageDraw
-import ImageFont
-import io, os, time
-
-from fractions import Fraction
+import picamera
 
 # GPIO pins for 5 way navigation switch
 BTN_UP              =   19      # Up
@@ -40,7 +40,7 @@ LCD_LED             =   22      # LCD LED enable pin (HIGH=ON, LOW=OFF)
 LCD_CONTRAST        =   50      # LCD contrast 0-100
 
 # Root directory where app was launched
-root_dir = os.getcwd()
+ROOT_DIR = os.getcwd()
 
 # Load fonts
 font_small = ImageFont.load_default()

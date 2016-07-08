@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #===========================================================================
 # camera_server.py
 #
@@ -12,22 +12,22 @@
 # 2015-04-06
 # Carter Nelson
 #===========================================================================
-import campi
-
-import tornado.httpserver
-import tornado.websocket
-import tornado.web
-
+import os
 import time
 import cStringIO as io
 import base64
 import Image
 import ImageDraw
 import ImageFont
-import os
+
+import tornado.httpserver
+import tornado.websocket
+import tornado.web
+
+import campi
 
 # Root directory where app was launched
-root_dir = os.getcwd()
+ROOT_DIR = os.getcwd()
 
 # define port server will listen to
 PORT = 8008
@@ -200,7 +200,7 @@ def start_timelapse():
         time.sleep(1)
     print "---| Done |----------------------------------"
     print "Time lapse complete, saved to {0}.".format(timelapse_name)
-    os.chdir(root_dir)
+    os.chdir(ROOT_DIR)
 
 #-------------------------------------------------------------------------
 # Tornado Server Setup
