@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #===========================================================================
 # camera_basic.py
 #
@@ -11,10 +11,11 @@
 # 2014-10-29
 # Carter Nelson
 #===========================================================================
-import campi
 import time
 import datetime
 import os
+
+import campi
 
 # Root directory where app was launched
 root_dir = os.getcwd()
@@ -97,4 +98,3 @@ finally:
     
 print "Time lapse complete, saved to {0}.".format(timelapse_name)
 os.chdir(root_dir)
-            
