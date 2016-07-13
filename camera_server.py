@@ -33,9 +33,15 @@ ROOT_DIR = os.getcwd()
 # define port server will listen to
 PORT = 8008
 
+# Tornado settings
+settings = {
+    "static_path": os.path.join(os.path.dirname(__file__), "static"),
+    "template_path": os.path.join(os.path.dirname(__file__), "templates"),
+}
+
 # Camera setup
 camera = campi.Campi()
-ISO = 100                                   # default ISO
+ISO = 0                                     # default ISO
 shutter = 0                                 # default shutter speed
 camera.set_cam_config("resolution",(1920, 1080))
 camera.set_cam_config("shutter_speed", shutter)
@@ -198,7 +204,7 @@ def start_timelapse():
     os.chdir(ROOT_DIR)
 
 #-------------------------------------------------------------------------
-# Tornado Server Setup
+#              W E B S E R V E R   (tornado)
 #-------------------------------------------------------------------------
 # camera shut down
 class CameraShutDownHandler(tornado.web.RequestHandler):
@@ -262,7 +268,7 @@ class CameraPreviewWebSocket(tornado.websocket.WebSocketHandler):
         
     def loop(self):
         iostream = io.StringIO()
-        camera.capture_stream(iostream)
+        camera.capture_stream(iostream, size=(640, 360))
         try:
             self.write_message(base64.b64encode(iostream.getvalue()))
         except tornado.websocket.WebSocketClosedError:
@@ -289,7 +295,7 @@ class CameraSetUpHandler(tornado.web.RequestHandler):
         print "GET Request from {}".format(self.request.remote_ip)
         disp_show_summary()
         kwargs = self.__build_kwargs__()
-        self.render('timelapse.html', **kwargs)
+        self.render("timelapse.html", **kwargs)
         
     def post(self):
         print "POST Request from {}".format(self.request.remote_ip)
@@ -383,6 +389,7 @@ class CameraTimeLapseHandler(tornado.web.RequestHandler):
        
 # map URLs to handlers
 handlers = ([
+    (r"/",                  CameraSetUpHandler),
     (r"/camera_setup",      CameraSetUpHandler),
     (r"/camera_timelapse",  CameraTimeLapseHandler),
     (r"/camera_preview",    CameraPreviewHandler),
@@ -395,7 +402,7 @@ handlers = ([
 # MAIN
 #===========================
 print "create app..."
-app = tornado.web.Application(handlers)
+app = tornado.web.Application(handlers, **settings)
 print "create http server..."
 server = tornado.httpserver.HTTPServer(app)
 print "start listening on port {}...".format(PORT)
@@ -405,4 +412,3 @@ disp_big_msg("  UP  ")
 tornado.ioloop.IOLoop.instance().start()
 disp_big_msg("STOPPD")
 print "i guess we're done then."
-

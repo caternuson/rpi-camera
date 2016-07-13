@@ -110,7 +110,7 @@ class Campi():
         if ios == None:
             return
         with PiCamera(sensor_mode=5) as camera:
-            camera = self.__update_camera__(camera=camera, use_video_port=True)
+            camera = self.__update_camera(camera=camera, use_video_port=True)
             camera.capture(ios, 'jpeg', use_video_port=True, resize=size)
             
     def capture_with_histogram(self, filename, fill=False):
