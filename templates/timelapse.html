@@ -98,7 +98,16 @@
                          L I V E    P R E V I E W
       ----------------------------------------------------------------------->
       <div role="tabpanel" id="tab_preview" class="tab-pane">
+        <div class="text-center">
+          <div id="live_view" style="background:url("static/test.jpg"); width:640px; height:360px;">
+          <object data={{ static_url("rule_of_thirds_16x9.svg") }} width=640 height=360></object>
+          </div>
+        </div>
+        
+        <!--
         <img id="live_view" class="img-responsive center-block" src={{ static_url("test.jpg") }}/>
+        -->
+        
         <br/><br/>
       </div>
     </div>
@@ -108,7 +117,7 @@
    
   $('a[data-toggle="tab"]').on('hide.bs.tab', function (e) {
     if ($(e.target).attr("href") === "#tab_preview") {
-      window.alert("STOP STREAM");
+      //window.alert("STOP STREAM");
       if (ws != null) {
         if (ws.readyState == WebSocket.OPEN) {
             ws.close()
@@ -120,10 +129,11 @@
   
   $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
     if ($(e.target).attr("href") === "#tab_preview") {
-      window.alert("START STREAM");
+      //window.alert("START STREAM");
       ws = new WebSocket("ws://"+location.host+"/camera_ws");
       ws.onmessage = function (messageEvent) {
-        live_view.src = "data:image/jpeg;base64," + messageEvent.data;
+        //live_view.src = "data:image/jpeg;base64," + messageEvent.data;
+        live_view.style.backgroundImage = "data:image/jpeg;base64," + messageEvent.data;
       }
     }
   })
