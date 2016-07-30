@@ -13,7 +13,7 @@ import json
 
 import tornado.httpserver
 import tornado.websocket
-import tornjavascript JSON appendado.web
+import tornado.web
 
 import campi
 import timelapser
@@ -158,7 +158,7 @@ class AjaxCapture(tornado.web.RequestHandler):
     """Handle AJAX for image capture."""
 
     def post(self, ):
-        print "Capturijavascript JSON appendng image."
+        print "Capturing image."
         filename = 'static/preview.jpg'
         camera.capture_with_histogram(filename)
         url = "{0}?{1}".format(filename, time.time())  # prevent using cached image
