@@ -14,6 +14,7 @@ import json
 import tornado.httpserver
 import tornado.websocket
 import tornado.web
+import tornado.escape
 
 import campi
 import timelapser
@@ -23,13 +24,14 @@ PORT = 8080
 
 camera = campi.Campi()
 camera.set_cam_config("resolution",(1920, 1080))
+#camera.LCD_LED_On()
 
 # timelapse control thread
 timelapse = None
 
 # global config
-config = {'delta_time':10,
-          'total_imgs':5,
+config = {'delta_time':0,
+          'total_imgs':0,
           'shutter_speed':0,
           'iso':0,
         }
@@ -48,7 +50,7 @@ class MainHandler(tornado.web.RequestHandler):
             self.render("timelapse.html")
         else:
             print "configure"
-            self.render("configure.html")                
+            self.render("configure.html", config=json.dumps(config))
         
 class TimelapseHandler(tornado.web.RequestHandler):
     """Handler for starting a timelapse."""

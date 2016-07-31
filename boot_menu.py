@@ -15,6 +15,7 @@ import os
 import campi
 
 camera = campi.Campi()
+#camera.LCD_LED_On()
 
 selection = 1
 
