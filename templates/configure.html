@@ -21,12 +21,15 @@
       $("#iso").change(function (event) {
         send_config();
       });
-      $("#take").click(function (event) {
-        return get_preview();
-      });
       $("#go").click(function (event) {
         return start_timelapse();
       })
+      $("#take").click(function (event) {
+        return get_preview();
+      });
+      $("#off").click(function (event) {
+        return power_down();
+      });
       $("#preview").attr("src","static/test_pattern.jpg")
     });
     
@@ -76,6 +79,13 @@
         window.location = "/timelapse"  
       }
       return false;
+    }
+    
+    function power_down() {
+      if (window.confirm("POWER DOWN?")) {
+        window.location = "/powerdown"
+      }
+      return false;      
     }
     
     $.ajax({
@@ -172,6 +182,11 @@
         <p>
           <div id="dl_status" class="alert alert-info text-center" role="alert"></div>
         </p>
+        <div class="text-center">
+        <button id="off" type="button" class="btn btn-danger btn-lg">
+          <span class="glyphicon glyphicon-off"></span> OFF
+        </button>
+        </div>        
         </div>
       </div>
       <!----------------------------------------------------------------------

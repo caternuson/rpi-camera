@@ -36,7 +36,7 @@ config = {'delta_time':10,
 
 class MainHandler(tornado.web.RequestHandler):
     """Handler for server root."""
-    
+   
     def get(self, ):
         print "Root get."
         tl_running = False
@@ -198,7 +198,15 @@ class MJPGStream(tornado.web.RequestHandler):
             camera.mjpgstream_stop()
             print "STOP"
         self.write(json.dumps(resp))
-            
+        
+class PowerDownHandler(tornado.web.RequestHandler):
+    def get(self, ):
+        self.render("powerdown.html")
+        camera.disp_msg("BYE BYE")
+        print "BYE BYE"
+        time.sleep(5)
+        os.system("sudo halt")
+        
 class MainServerApp(tornado.web.Application):
     """Main Server application."""
     
@@ -212,6 +220,7 @@ class MainServerApp(tornado.web.Application):
             (r"/capture",           AjaxCapture),
             (r"/mjpgstream",        MJPGStream),   
             (r"/setdate",           AjaxSetDate),
+            (r"/powerdown",         PowerDownHandler),   
         ]
         
         settings = {
