@@ -1,5 +1,5 @@
 #===========================================================================
-# TimeLapser.py
+# timelapser.py
 #
 # Timelapse thread class.
 #
@@ -11,7 +11,7 @@ import time
 import os
 
 class TimeLapser(threading.Thread):
-    '''A class for performing timelapse capture in a separate thread.'''
+    """A class for performing timelapse capture in a separate thread."""
     
     def __init__(self, group=None, target=None, name=None, args=(), kwargs=None):
         threading.Thread.__init__(self, group=group, target=target, name=name)
@@ -32,7 +32,7 @@ class TimeLapser(threading.Thread):
         self.waiter = threading.Event()
         
     def run(self, ):
-        '''Take a series of images.'''
+        """Take a series of images."""
         self.timelapse_name = time.strftime("%Y%m%d_%H%M",time.localtime())
         self.dir = os.path.join(os.getcwd(), self.timelapse_name)
         try:
@@ -85,12 +85,12 @@ class TimeLapser(threading.Thread):
         self.keep_running = False
                 
     def stop(self, ):
-        '''Stop the timelapse and terminate the thread.'''
+        """Stop the timelapse and terminate the thread."""
         self.keep_running = False
         self.waiter.set()       
       
     def get_status(self, ):
-        '''Return current status of timelapse.'''
+        """Return current status of timelapse."""
         return {
             'timelapse_name'    : self.timelapse_name ,
             'image_count'       : self.image_count ,

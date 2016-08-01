@@ -1,3 +1,11 @@
+#===========================================================================
+# mjpgstream_thread.py
+#
+# Runs a MJPG stream on provided port.
+#
+# 2016-07-25
+# Carter Nelson
+#===========================================================================
 import threading
 import SimpleHTTPServer
 import SocketServer
@@ -9,6 +17,7 @@ resize = (640,360)
 
 class MJPGStreamThread(threading.Thread):
     """Thread to server MJPG stream."""
+    
     def __init__(self, group=None, target=None, name=None, args=(), kwargs=None):
         threading.Thread.__init__(self, group=group, target=target, name=name)
         
