@@ -1,15 +1,27 @@
-rpi-camera
-==========
+# rpi-camera
+![thumbnail](http://caternuson.github.io/rpi-camera/static/rpi-camera-thumb.jpg)<br/>
+Python 2.7 software for Raspberry Pi based camera.
 
-Python code for Raspberry Pi based time lapse camera.
-* campi.py - class for interfacing to hardware
-* camera_basic.py - basic example of using camera
-* camera_timelapse.py - uses camera to take time lapses
+# Hardware
 
-Hardware:
-* Raspberry Pi Model A+
-* Raspberry Pi Camera Module
-* Nokia LCD Display
-* Boost converter / charger
-* LiPo battery
-* Buttons
+
+# Software
+A brief description of the various software components.
+* ```camera_server.py``` - provides a web interface for performing timelapses
+
+# Dependencies
+*  access point
+*  dhcp
+*  picamera
+*  adafruit nokia lcd library
+
+# Install
+Simply clone this repo:
+```
+$ git clone https://github.com/caternuson/rpi-camera.git
+```
+and then start the server:
+```
+$ cd rpi-camera
+$ sudo python camera_server.py
+```
