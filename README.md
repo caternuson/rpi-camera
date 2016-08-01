@@ -15,22 +15,26 @@ Python 2.7 software for Raspberry Pi based camera.
 # Software
 A brief description of the various software components.
 * ```camera_server.py``` - provides a web interface for performing timelapses
-* ```campi.pi``` - defines a class for interfacing with the hardware
+* ```campi.py``` - defines a class for interfacing with the hardware
 * ```timelapser.py``` - defines a thread class for performing a timelapse
 * ```mjpgstream_thread.py``` - defines a thread class for serving a MJPEG stream
 * ```boot_menu.py``` - can be run at boot to bring camera up in various modes
 
 # Dependencies
-*  ```picamera``` for Python access to camera module
+*  **picamera** for Python access to camera module
     * https://picamera.readthedocs.io
-*  ```Adafruit Nokia LCD library``` for LCD display
+*  **Adafruit Nokia LCD library** for LCD display
     * https://github.com/adafruit/Adafruit_Nokia_LCD
-*  ```Adafruit Python GPIO``` - for GPIO access
+*  **Adafruit Python GPIO** - for GPIO access
     * https://github.com/adafruit/Adafruit_Python_GPIO
 
 # Wifi Access Point Setup
-This project uses **hostapd** to run the wifi in access point mode. The
-USB wifi donlge I used had the RTL8188CUS chipset, which required a custom
+This project uses **hostapd** to run the wifi in access point mode. If you're
+lucky, you can simply:
+```
+sudo apt-get install hostapd
+```
+However, the USB wifi donlge I used has the RTL8188CUS chipset, which required a custom
 build of hostapd. Here's what I did:
 * Download zip file from [here](http://www.realtek.com.tw/downloads/downloadsView.aspx?Langid=1&PNid=21&PFid=48&Level=5&Conn=4&DownTypeID=3&GetDown=false)
     * Choose RTL8188CUS, click GO, download Unix (Linux) driver
