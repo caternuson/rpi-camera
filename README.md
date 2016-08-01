@@ -3,6 +3,8 @@
 Python 2.7 software for Raspberry Pi based camera.
 
 # Hardware
+A wiring diagram can be found in the **/doc** folder. Here is a list of the
+main items.
 * [Raspberry Pi Model A+](https://www.raspberrypi.org/products/model-a-plus/)
 * [Raspberry Pi Camera Module v1](https://www.raspberrypi.org/products/camera-module/)
 * [Adafruit USB wifi dongle](https://www.adafruit.com/products/814)
