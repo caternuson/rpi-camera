@@ -23,11 +23,13 @@ A brief description of the various software components.
 * ```boot_menu.py``` - can be run at boot to bring camera up in various modes
 
 # Dependencies
-*  **picamera** for Python access to camera module
+* **picamera** for Python access to camera module
     * https://picamera.readthedocs.io
-*  **Adafruit Nokia LCD library** for LCD display
+* **Tornado Web Framework**
+    * https://pypi.python.org/pypi/tornado
+* **Adafruit Nokia LCD library** for LCD display
     * https://github.com/adafruit/Adafruit_Nokia_LCD
-*  **Adafruit Python GPIO** - for GPIO access
+* **Adafruit Python GPIO** - for GPIO access
     * https://github.com/adafruit/Adafruit_Python_GPIO
 
 # Wifi Access Point Setup
