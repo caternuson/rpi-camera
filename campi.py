@@ -121,12 +121,12 @@ class Campi():
             camera = self.__update_camera(camera=camera, use_video_port=True)
             camera.capture(ios, 'jpeg', use_video_port=True, resize=size)
     
-    def mjpegstream_start(self, port=8081):
+    def mjpegstream_start(self, port=8081, resize=(640,360)):
         """Start thread to serve MJPEG stream on specified port."""
         if not self._mjpegger == None:
             return
         camera = self.__update_camera(camera=PiCamera(sensor_mode=5))        
-        kwargs = {'camera':camera, 'port':port, 'resize':(640,360)}
+        kwargs = {'camera':camera, 'port':port, 'resize':resize}
         self._mjpegger = mjpegger.MJPEGThread(kwargs=kwargs)
         self._mjpegger.start()
         while not self._mjpegger.streamRunning:

@@ -166,14 +166,6 @@ class AjaxCapture(tornado.web.RequestHandler):
         url = "{0}?{1}".format(filename, time.time())  # prevent using cached image
         resp = {'url':url}
         self.write(json.dumps(resp))
-        '''
-        with open(filename, "rb") as f:
-            img_data = base64.b64encode(f.read())
-        self.write({
-            "img_data": img_data,
-        })
-        '''
-        print "Done."
 
 class AjaxSetDate(tornado.web.RequestHandler):
     """Handle AJAX for setting time and date."""
@@ -184,7 +176,7 @@ class AjaxSetDate(tornado.web.RequestHandler):
         os.system('date -s "{}"'.format(json_data['date']))
 
 class MJPEGStream(tornado.web.RequestHandler):
-    """Server a MJPEG stream."""
+    """Handler for serving a MJPEG stream."""
     
     def post(self, ):
         print "mjpegstream post"
@@ -202,6 +194,8 @@ class MJPEGStream(tornado.web.RequestHandler):
         self.write(json.dumps(resp))
         
 class PowerDownHandler(tornado.web.RequestHandler):
+    """Handler for powering down the system."""
+    
     def get(self, ):
         self.render("powerdown.html")
         camera.disp_msg("BYE BYE")
