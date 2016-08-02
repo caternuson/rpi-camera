@@ -103,6 +103,11 @@ to the pi to setup and run a timelapse.
 ```
 http://piaddress:8080/
 ```
+# The Boot Menu
+The program ```boot_menu.py``` is intended to be run at boot to provide a way
+to select from various camera modes. Options are shown on the LCD display
+and selected using the 5 way navigation button. If you want to use this feature,
+you will need to supply the needed startup programs referenced in the script.
 
 # Making Timelapse Movie
 Currently, the server simply captures a bunch of individual JPEG files. They

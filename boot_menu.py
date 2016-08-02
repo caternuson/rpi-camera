@@ -22,9 +22,9 @@ selection = 1
           #01234567890123
 BLANK   = ' [ ] '
 CHECKED = ' [X] '
-MENU1   =      'HOME WIFI'
-MENU2   =      'AP WIFI  '
-MENU3   =      'NO WIFI  '
+MENU1   =      'AP WIFI  '
+MENU2   =      'HOME WIFI'
+MENU3   =      'EXIT     '
 MENU4   =      'EXIT     '
 
 cursor = {}
@@ -71,20 +71,20 @@ while True:
     if (button_state[campi.BTN_SEL]):
         print 'selection = %i' % selection
         if (selection==1):
-            # start home wifi
-            camera.disp_msg(' home wifi    '+\
-                            ' starting.... ')
-            os.system('python /home/pi/start_homewifi.py')
-        if (selection==2):
             # start access point and time lapse web server
             camera.disp_msg(' access point '+\
                             ' starting.... ')            
             os.system('python /home/pi/start_ap.py')
             os.system('cd /home/pi/rpi-camera')
             os.system('python /home/pi/rpi-camera/camera_server.py')
+        if (selection==2):
+            # start home wifi
+            camera.disp_msg(' home wifi    '+\
+                            ' starting.... ')
+            os.system('python /home/pi/start_homewifi.py')
         if (selection==3):
-            # start non-wifi menu driven time lapse
-            os.system('python /home/pi/rpi-camera/timelapse_basic.py')
+            # do nothing, just exit
+            pass
         if (selection==4):
             # do nothing, just exit
             pass
