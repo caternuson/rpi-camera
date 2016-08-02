@@ -30,7 +30,7 @@ import Adafruit_Nokia_LCD as LCD
 import Adafruit_GPIO.SPI as SPI
 
 from picamera import PiCamera
-import mjpgstream_thread
+import mjpegger
 
 # GPIO pins for 5 way navigation switch
 BTN_UP              =   19      # Up
@@ -91,7 +91,7 @@ class Campi():
         self._disp.clear()
         self._disp.display()
         
-        self._mjpgstream_thread = None
+        self._mjpegger = None
         
         self._gpio = GPIO
         self._gpio.setwarnings(False)
@@ -121,30 +121,30 @@ class Campi():
             camera = self.__update_camera(camera=camera, use_video_port=True)
             camera.capture(ios, 'jpeg', use_video_port=True, resize=size)
     
-    def mjpgstream_start(self, port=8081):
-        """Start thread to serve MJPG stream on specified port."""
-        if not self._mjpgstream_thread == None:
+    def mjpegstream_start(self, port=8081):
+        """Start thread to serve MJPEG stream on specified port."""
+        if not self._mjpegger == None:
             return
         camera = self.__update_camera(camera=PiCamera(sensor_mode=5))        
         kwargs = {'camera':camera, 'port':port, 'resize':(640,360)}
-        self._mjpgstream_thread = mjpgstream_thread.MJPGStreamThread(kwargs=kwargs)
-        self._mjpgstream_thread.start()
-        while not self._mjpgstream_thread.streamRunning:
+        self._mjpegger = mjpegger.MJPEGThread(kwargs=kwargs)
+        self._mjpegger.start()
+        while not self._mjpegger.streamRunning:
             pass
     
-    def mjpgstream_stop(self, ):
-        """Stop the MJPG stream, if running."""
-        if not self._mjpgstream_thread == None:
-            if self._mjpgstream_thread.is_alive():
-                self._mjpgstream_thread.stop()
-            self._mjpgstream_thread = None
+    def mjpegstream_stop(self, ):
+        """Stop the MJPEG stream, if running."""
+        if not self._mjpegger == None:
+            if self._mjpegger.is_alive():
+                self._mjpegger.stop()
+            self._mjpegger = None
                 
     def mjpgstream_is_alive(self, ):
         """Return True if stream is running, False otherwise."""
-        if self._mjpgstream_thread == None:
+        if self._mjpegger == None:
             return False
         else:
-            return self._mjpgstream_thread.is_alive()
+            return self._mjpegger.is_alive()
                         
     def capture_with_histogram(self, filename, fill=False):
         """Capture an image with histogram overlay and save to specified file.

@@ -1,5 +1,5 @@
 #===========================================================================
-# mjpgstream_thread.py
+# mjpegger.py
 #
 # Runs a MJPG stream on provided port.
 #
@@ -15,8 +15,8 @@ keepStreaming = False
 camera = None
 resize = (640,360)
 
-class MJPGStreamThread(threading.Thread):
-    """Thread to server MJPG stream."""
+class MJPEGThread(threading.Thread):
+    """Thread to server MJPEG stream."""
     
     def __init__(self, group=None, target=None, name=None, args=(), kwargs=None):
         threading.Thread.__init__(self, group=group, target=target, name=name)
@@ -30,8 +30,8 @@ class MJPGStreamThread(threading.Thread):
         self.server = None
     
     def run(self, ):
-        print "mjpgstream_thread starting"
-        self.server = SocketServer.TCPServer(("",self.port), MJPGStreamHandler,
+        print "MJPEGThread starting"
+        self.server = SocketServer.TCPServer(("",self.port), MJPEGStreamHandler,
             bind_and_activate=False)
         self.server.allow_reuse_address = True
         self.server.timeout = 0.1
@@ -44,18 +44,18 @@ class MJPGStreamThread(threading.Thread):
         self.streamRunning = False
         camera.close()
         self.server.server_close()
-        print "mjpgstream_thread done"
+        print "MJPEGThread done"
             
     def stop(self, ):
         global keepStreaming
         keepStreaming = False
         self.keepRunning = False
         
-class MJPGStreamHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-    """Handler for MJPG stream."""
+class MJPEGStreamHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+    """Handler for MJPEG stream."""
     
     def do_GET(self, ):
-        print "mjpgstream handler GET"
+        print "MJPEGStreamHandler GET"
         global keepStreaming
         keepStreaming = True
         

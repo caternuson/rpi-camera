@@ -183,21 +183,21 @@ class AjaxSetDate(tornado.web.RequestHandler):
         json_data = json.loads(self.request.body)
         os.system('date -s "{}"'.format(json_data['date']))
 
-class MJPGStream(tornado.web.RequestHandler):
-    """Server a MJPG stream."""
+class MJPEGStream(tornado.web.RequestHandler):
+    """Server a MJPEG stream."""
     
     def post(self, ):
-        print "mjpgstream post"
+        print "mjpegstream post"
         json_data = json.loads(self.request.body)
         command = json_data['command']
         resp = {}
         if "START" in command.upper():
-            camera.mjpgstream_start()
+            camera.mjpegstream_start()
             addr = self.request.host.partition(":")[0]
             resp['url'] = "http://" + addr + ":8081/"
             print "START"
         elif "STOP" in command.upper():
-            camera.mjpgstream_stop()
+            camera.mjpegstream_stop()
             print "STOP"
         self.write(json.dumps(resp))
         
@@ -220,7 +220,7 @@ class MainServerApp(tornado.web.Application):
             (r"/cancel",            TimelapseCancelHandler),
             (r"/ajaxconfig",        AjaxConfig),
             (r"/capture",           AjaxCapture),
-            (r"/mjpgstream",        MJPGStream),   
+            (r"/mjpegstream",       MJPEGStream),   
             (r"/setdate",           AjaxSetDate),
             (r"/powerdown",         PowerDownHandler),   
         ]

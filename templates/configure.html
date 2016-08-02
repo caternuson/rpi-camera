@@ -205,7 +205,7 @@
       if ($(e.target).attr("href") === "#tab_liveview") {
         json_data = JSON.stringify({"command":"stop"});
         $.ajax({
-          url: '/mjpgstream',
+          url: '/mjpegstream',
           method: 'POST',
           data: json_data,
           success: function(json_resp, status) {
@@ -219,7 +219,7 @@
       if ($(e.target).attr("href") === "#tab_liveview") {
         json_data = JSON.stringify({"command":"start"});      
         $.ajax({
-          url: '/mjpgstream',
+          url: '/mjpegstream',
           method: 'POST',
           data: json_data,
           success: function(json_resp) {
