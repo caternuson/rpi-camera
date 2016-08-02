@@ -23,13 +23,15 @@ A brief description of the various software components.
 * ```boot_menu.py``` - can be run at boot to bring camera up in various modes
 
 # Dependencies
+* **Tornado Web Framework** for web interface and control
+    * https://pypi.python.org/pypi/tornado
 * **picamera** for Python access to camera module
     * https://picamera.readthedocs.io
-* **Tornado Web Framework**
-    * https://pypi.python.org/pypi/tornado
+* **Python Imaging Library** used for drawing to LCD
+    * http://www.pythonware.com/products/pil/
 * **Adafruit Nokia LCD library** for LCD display
     * https://github.com/adafruit/Adafruit_Nokia_LCD
-* **Adafruit Python GPIO** - for GPIO access
+* **Adafruit Python GPIO** for GPIO access
     * https://github.com/adafruit/Adafruit_Python_GPIO
 
 # Wifi Access Point Setup
