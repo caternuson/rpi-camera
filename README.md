@@ -19,7 +19,7 @@ A brief description of the various software components.
 * ```camera_server.py``` - provides a web interface for performing timelapses
 * ```campi.py``` - defines a class for interfacing with the hardware
 * ```timelapser.py``` - defines a thread class for performing a timelapse
-* ```mjpgstream_thread.py``` - defines a thread class for serving a MJPEG stream
+* ```mjpegger.py``` - defines a thread class for serving a MJPEG stream
 * ```boot_menu.py``` - can be run at boot to bring camera up in various modes
 
 # Dependencies
@@ -84,7 +84,7 @@ Once the above have been installed and configured, start them:
 sudo service hostapd start
 sudo service isc-dhcp-server start
 ```
-**NOTE:** this is sysv init style, systemd will be different.
+**NOTE:** this is sysv init style, systemd would be different.
 
 # Installing rpi-camera
 Once you've installed the above dependencies and have them working,
@@ -93,4 +93,23 @@ simply clone this repo and run the server:
 $ git clone https://github.com/caternuson/rpi-camera.git
 $ cd rpi-camera
 $ sudo python camera_server.py
+```
+With the server running, you should be able to open a web browser and navigate
+to the pi to setup and run a timelapse.
+```
+http://piaddress:8080/
+```
+
+# Making Timelapse Movie
+Currently, the server simply captures a bunch of individual JPEG files. They
+are named using the current date and time and then serialized with a four
+digit number using the format: **yyyymmdd_hhmm_xxxx.jpg**. These can
+be rendered into a movie using **avconv** with the following command:
+```
+avconv -i <yyyymmdd_hhmm>_%04d.jpg -vcodec libx264 outputname.mp4
+```
+where ```<yyyymmdd_hhmm>``` is replaced with the basename of the JPEG files. Also,
+outputname can be changed to whatever. For example:
+```
+avconv -i 20160704_1938_%04d.jpg -vcodec libx264 fireworks.mp4
 ```
