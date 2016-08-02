@@ -1,1 +1,132 @@
-hello world
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body class="bd-docs">
+<div class="container">
+  <p>
+    <h1>rpi-camera</h1>
+    <h5>A Raspberry Pi based camera.</h5>
+    <a class="btn btn-primary" target="_blank" href="https://github.com/caternuson/rpi-camera">View on GitHub</a>  
+  </p>      
+</div>
+<div class="container">
+  <ul class="nav nav-tabs">
+    <li class="active"><a data-toggle="tab" href="#tab_home"><span class="material-icons">home</span></a></li>
+    <li><a data-toggle="tab" href="#tab_software"><span class="material-icons">computer</span></a></li>
+    <li><a data-toggle="tab" href="#tab_build"><span class="material-icons">settings</span></a></li>
+  </ul>
+  <div class="tab-content">
+    <div id="tab_home" class="tab-pane active">
+      <p>
+      <figure>
+        <img class="img-rounded img-responsive" src="static/rpi-camera-glamshot.jpg"/>
+        <figcaption class="small"><strong>The Raspberry Pi based camera in housing.</strong></figcaption>
+      </figure>
+      </p>
+      <p>
+        A <a href="https://www.raspberrypi.org/">Raspberry Pi</a> based camera.
+        Hardware includes a <a href="https://www.raspberrypi.org/products/model-a-plus/">Raspberry Pi A+</a>,
+        a <a href="https://www.raspberrypi.org/products/camera-module/">camera module</a>,
+        various parts from <a href="https://www.adafruit.com/">Adafruit</a>, and an old waterproof camera housing.
+      </p>
+      <p>
+        A collection of timelapses created with the camera can be found on
+        <a href="https://www.youtube.com/playlist?list=PLne5S_PBsVBvwQPGO0gUQp58s325vo8ng">YouTube</a>.
+      </p>
+    </div>
+    <div id="tab_software" class="tab-pane">
+      <h2>SOFTWARE</h2>
+      <p>
+        The software is available on <a target="_blank" href="https://github.com/caternuson/rpi-camera">GitHub</a>.
+      </p>
+    </div>
+    <div id="tab_build" class="tab-pane">
+      <h2>HARDWARE</h2>
+      <p>
+        Here is a list of the main hardware components used.
+        <ul>
+          <li><a href="https://www.raspberrypi.org/products/model-a-plus/">Raspberry Pi Model A+</a></li>
+          <li><a href="https://www.raspberrypi.org/products/camera-module/">Raspberry Pi Camera Module v1</a></li>
+          <li><a href="https://www.adafruit.com/products/814">Adafruit USB wifi dongle</a></li>
+          <li><a href="https://www.adafruit.com/products/338">Adafruit Nokia LCD display</a></li>
+          <li><a href="https://www.adafruit.com/products/1944">Adafruit PowerBoost 500 Charger</a></li>
+          <li><a href="https://www.adafruit.com/products/1781">Adafruit 2200mAh lion battery</a></li>
+          <li><a href="https://www.adafruit.com/products/504">Adafruit 5 way navigation switch</a></li>
+          <li>Canon WP-DC20 Waterproof Case</li>
+        </ul>
+        Everything is housed in a Canon WP-DC20 waterproof case found at a
+        thrift store. Particle board is used to provide a mounting structure
+        for the main components. The rear view of the main board is shown below.
+        <figure>
+          <img class="img-rounded img-responsive" src="static/rear-view-labels.jpg"/>
+          <figcaption class="small"><strong>Rear view of main board showing (1) Nokia
+          LCD display, (2) 5 way navigation switch, (3) Adafruit Powerboost 500
+          Charger.</strong></figcaption>
+        </figure>
+      </p> 
+      <p>
+        The front view of the main board is shown below (the camera module has
+        been disconnected). A ribbon cable is used to provide a low profile
+        connection to the GPIO header.
+        <figure>
+          <img class="img-rounded img-responsive" src="static/front-view-labels.jpg"/>
+          <figcaption class="small"><strong>Front view of main board showing (1) 2200mAh
+          lion battery, (2) Raspberry Pi A+, (3) USB Wifi dongle, (4) serial debug
+          cable.</strong></figcaption>
+        </figure>
+      </p>
+      <p>
+        A drawing showing the wiring interconnect is provided in the
+        <a href="https://github.com/caternuson/rpi-camera">repo</a> under the
+        <strong>doc</strong> folder.
+        <figure>
+          <img class="img-rounded img-responsive" src="static/rpi-camera-wiring-interconnect.jpg"/>
+          <figcaption class="small"><strong>Wiring interconnect diagram.</strong></figcaption>
+        </figure>
+      </p>
+      <p>
+        Particle board was also used to create a simple friction fit mounting
+        adapter for the camera module.
+        <figure>
+          <img class="img-rounded img-responsive" src="static/camera-mount.jpg"/>
+          <figcaption class="small"><strong>Camera module mounting adapter.</strong></figcaption>
+        </figure>
+      </p>
+      <p>
+        This mounting adapter fits into the bottom of the lens area.
+        <figure>
+          <img class="img-rounded img-responsive" src="static/camera-install.jpg"/>
+          <figcaption class="small"><strong>Camera module mounting adapter
+          installed in camera housing.</strong></figcaption>
+        </figure>
+      </p>
+      <p>
+        With the camera module installed, it is connect to the Raspberry Pi
+        on the main board and the whole thing is then installed as shown
+        below. There are several internal ribs that are used to hold the main
+        board in place.
+        <figure>
+          <img class="img-rounded img-responsive" src="static/board-install-labels.jpg"/>
+          <figcaption class="small"><strong>Main board installed in camera housing
+          showing friction fit points.</strong></figcaption>
+        </figure>
+      </p>
+      <p>
+        And here is the final product out in the wild.
+        <figure>
+          <img class="img-rounded img-responsive" src="static/rpi-camera-glamshot.jpg"/>
+          <figcaption class="small"><strong>The rpi-camera.</strong></figcaption>
+        </figure>
+      </p>
+    </div>
+  </div>
+</div>
+</body>  
+</html>
