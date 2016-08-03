@@ -156,7 +156,7 @@ class Campi():
         im_in   = Image.open(hname)
         im_out  = Image.new('RGBA', im_in.size)
         im_out.paste(im_in)
-        width, height = im_in.size
+        width, height = im_out.size
         draw = ImageDraw.Draw(im_out)
 
         # add rule of thirds lines
@@ -185,14 +185,14 @@ class Campi():
             bl.append((int(i*xs),height-int(bh[i]*ys)))        
         
         # draw it
-        lw = max(5,int((0.005*max(im_out.size))))
+        lw = int((0.01*max(im_out.size)))
         if (fill):
             rpoly = [(0,height)] + rl + [(width,height)]
             gpoly = [(0,height)] + gl + [(width,height)]
             bpoly = [(0,height)] + bl + [(width,height)]
-            draw.polygon(rpoly, fill=(255,0,0,90))
-            draw.polygon(gpoly, fill=(0,255,0,90))
-            draw.polygon(bpoly, fill=(0,0,255,90))
+            draw.polygon(rpoly, fill=(255,0,0,40))
+            draw.polygon(gpoly, fill=(0,255,0,40))
+            draw.polygon(bpoly, fill=(0,0,255,40))
         draw.line(rl, fill='red', width=lw)
         draw.line(gl, fill='green', width=lw)
         draw.line(bl, fill='blue', width=lw)
@@ -213,7 +213,7 @@ class Campi():
             draw.text((10,10+N*fh), line, font=font)
             N += 1
 
-        # save it and clean up 
+        # save it and clean up
         im_out.save(filename, quality=95)
         os.remove(hname)
         

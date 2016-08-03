@@ -24,7 +24,7 @@ PORT = 8080
 
 camera = campi.Campi()
 camera.set_cam_config("resolution",(1920, 1080))
-#camera.LCD_LED_On()
+camera.LCD_LED_On()
 
 # timelapse control thread
 timelapse = None
@@ -104,8 +104,16 @@ class TimelapseStatusHandler(tornado.websocket.WebSocketHandler):
         if timelapse == None:
             return
         status = timelapse.get_status()
-        camera.disp_msg("Timelapse Running. {0} of {1}".format(
-            status['image_count'], status['total_imgs']))
+        if status['is_alive']:
+            camera.disp_msg('  Timelapse   '+\
+                            '  running...  '+\
+                            '  {0} of {1}  '.format(
+                                                status['image_count'],
+                                                status['total_imgs'])
+                            )
+        else:
+            camera.disp_msg('  Timelapse   '+\
+                            '    DONE      ')            
         self.write_message(json.dumps(status))
 
 class TimelapseCancelHandler(tornado.web.RequestHandler):
@@ -232,4 +240,7 @@ class MainServerApp(tornado.web.Application):
 if __name__ == '__main__':
     tornado.httpserver.HTTPServer(MainServerApp()).listen(PORT)
     print "Server started on port {0}.".format(PORT)
+    camera.disp_msg('              '+\
+                    '    SERVER    '+\
+                    '    STARTED   ') 
     tornado.ioloop.IOLoop.instance().start()

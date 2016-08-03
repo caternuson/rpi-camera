@@ -132,7 +132,7 @@
         return power_down();
       });
       $("#preview").attr("src","static/test_pattern.jpg")
-      send_config(JSON.parse('{% raw config %}'));
+      update_ui(JSON.parse('{% raw config %}'));
     });
     
     function send_config() {
