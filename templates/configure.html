@@ -132,6 +132,8 @@
         return power_down();
       });
       $("#preview").attr("src","static/test_pattern.jpg")
+      img = new Image();
+      img.src = "static/nyan.gif";
       update_ui(JSON.parse('{% raw config %}'));
     });
     
