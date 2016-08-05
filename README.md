@@ -31,8 +31,10 @@ A brief description of the various software components.
     * http://www.pythonware.com/products/pil/
 * **Adafruit Nokia LCD library** for LCD display
     * https://github.com/adafruit/Adafruit_Nokia_LCD
-* **Adafruit Python GPIO** for GPIO access
+* **Adafruit Python GPIO** for SPI access
     * https://github.com/adafruit/Adafruit_Python_GPIO
+* **RPi.GPIO** for GPIO access
+    * https://pypi.python.org/pypi/RPi.GPIO
 
 # Wifi Access Point Setup
 This project uses **hostapd** to run the wifi in access point mode. If you're
