@@ -46,6 +46,99 @@
       <p>
         The software is available on <a target="_blank" href="https://github.com/caternuson/rpi-camera">GitHub</a>.
       </p>
+      <h2>CONNECTING</h2>
+      <p>
+        Once the software has been installed and the server is running, connect
+        to the camera via wifi. The default network SSID is <strong>picamera</strong>.
+        Once connected to the camera, open a browser and navigate to:
+        <pre>http://192.168.42.1:8080/</pre>
+        This connects to the server app running on the camera. From here, you
+        can setup and run timelapses. Use the tab icons at the top to switch
+        between the 3 main screens.
+      </p>
+      <p>
+        <strong>NOTE:</strong> the actual IP address of the camera depends on how
+        the access point software was setup.
+      </p>
+      <h2>TIMELAPSE SETUP</h2>
+      <p>
+        This screen provides basic timelapse setup and execution.
+        <figure>
+          <img class="img-responsive" src="static/screen_setup.jpg"/>
+          <figcaption class="small"><strong>Timelapse setup screen.</strong></figcaption>
+        </figure>
+      </p>
+      <p> 
+        <strong>DELTA TIME</strong> sets the amout of time, in seconds, between
+        each image acquisition. <strong>NUMBER OF IMAGES</strong> sets the total
+        number of images that will be aquired. The resulting
+        <strong>TOTAL TIME</strong> is shown in the blue box for the current setup.
+      </p>
+      <p>
+        To start the timelapse, press the <strong>[GO]</strong> button.
+      </p>
+      <h2>CAMERA SETUP</h2>
+      <p>
+        This screen provides basic camera setup and confirmation.
+        <div class="row">
+        <div class="col-xs-4">
+        <figure>
+          <img class="img-responsive" src="static/screen_preview1.jpg"/>
+          <figcaption class="small"><strong>Preview image (S=1/2048).</strong></figcaption>
+        </figure>
+        </div>
+        <div class="col-xs-4">
+        <figure>
+          <img class="img-responsive" src="static/screen_preview2.jpg"/>
+          <figcaption class="small"><strong>Preview image (S=1/1024).</strong></figcaption>
+        </figure>
+        </div>
+        <div class="col-xs-4">
+        <figure>
+          <img class="img-responsive" src="static/screen_preview3.jpg"/>
+          <figcaption class="small"><strong>Preview image (S=1/512).</strong></figcaption>
+        </figure>
+        </div>
+        </div>
+      </p>
+      <p>  
+        <strong>SHUTTER SPEED</strong> sets the desired shutter speed.
+        <strong>ISO</strong> sets the desired sensitivity. To take a sample
+        image with the current settings, press the <strong>[TAKE]</strong>
+        button. Various information is overlayed on this preview image.
+      </p>
+      <p>
+        The RGB histogram provides a good indication for overall image
+        exposure. In general, these curves should be centered as much as
+        possible. In the above 3 examples, S=2048 is OK, but maybe a little too
+        dark. S=1/512 is obviously too bright. With S=1/1024 the curves are centered
+        better, so this is probably the best choice.
+      </p>
+      <h2>LIVE VIEW</h2>
+      <p>
+        This screen provides a live view image of the camera, useful for aiming
+        and aligning.
+        <figure>
+          <img class="img-responsive" src="static/screen_liveview.jpg"/>
+          <figcaption class="small"><strong>Live view screen.</strong></figcaption>
+        </figure>
+      </p>
+      <p> 
+        The live view is started and stopped automatically, so simply navigate
+        to this tab to see the live view.
+      </p>
+      <h2>SHUT DOWN</h2>
+      <p>
+        In order to power down the camera safely, a shutdown command needs to
+        be sent to the system. To do this, simple navigate to the
+        <strong>CAMERA SETUP</strong> tab, scroll to the button, and find
+        the <strong>[OFF]</strong> button.
+        <figure>
+          <img class="img-responsive" src="static/screen_poweroff.jpg"/>
+          <figcaption class="small"><strong>Power down button.</strong></figcaption>
+        </figure>
+        Pressing the <strong>[OFF]</strong> button will power down the camera.
+      </p>
     </div>
     <div id="tab_build" class="tab-pane">
       <h2>HARDWARE</h2>
