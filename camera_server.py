@@ -130,7 +130,7 @@ class AjaxConfig(tornado.web.RequestHandler):
 
     def post(self, ):
         print("Updating config.")
-        json_data = json.loads(self.request.body)
+        json_data = json.loads(self.request.body.decode('utf-8'))
         resp = self.__process_json(json_data)
         for k in config:
             camera.set_cam_config(setting=k, value=config[k])
@@ -180,7 +180,7 @@ class AjaxSetDate(tornado.web.RequestHandler):
 
     def post(self, ):
         print("Setting date.")
-        json_data = json.loads(self.request.body)
+        json_data = json.loads(self.request.body.decode('utf-8'))
         os.system('date -s "{}"'.format(json_data['date']))
 
 class MJPEGStream(tornado.web.RequestHandler):
@@ -188,7 +188,7 @@ class MJPEGStream(tornado.web.RequestHandler):
 
     def post(self, ):
         print("mjpegstream post")
-        json_data = json.loads(self.request.body)
+        json_data = json.loads(self.request.body.decode('utf-8'))
         command = json_data['command']
         resp = {}
         if "START" in command.upper():

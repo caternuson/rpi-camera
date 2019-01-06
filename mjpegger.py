@@ -7,8 +7,7 @@
 # Carter Nelson
 #===========================================================================
 import threading
-import SimpleHTTPServer
-import SocketServer
+from http.server import HTTPServer, SimpleHTTPRequestHandler
 import io
 
 keepStreaming = False
@@ -31,12 +30,13 @@ class MJPEGThread(threading.Thread):
 
     def run(self, ):
         print("MJPEGThread starting")
-        self.server = SocketServer.TCPServer(("",self.port), MJPEGStreamHandler,
-            bind_and_activate=False)
-        self.server.allow_reuse_address = True
-        self.server.timeout = 0.1
-        self.server.server_bind()
-        self.server.server_activate()
+        # self.server = SocketServer.TCPServer(("",self.port), MJPEGStreamHandler,
+        #     bind_and_activate=False)
+        # self.server.allow_reuse_address = True
+        # self.server.timeout = 0.1
+        # self.server.server_bind()
+        # self.server.server_activate()
+        self.server = HTTPServer(("", self.port), MJPEGStreamHandler)
         self.keepRunning = True
         self.streamRunning = True
         while self.keepRunning:
@@ -51,7 +51,7 @@ class MJPEGThread(threading.Thread):
         keepStreaming = False
         self.keepRunning = False
 
-class MJPEGStreamHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class MJPEGStreamHandler(SimpleHTTPRequestHandler):
     """Handler for MJPEG stream."""
 
     def do_GET(self, ):
