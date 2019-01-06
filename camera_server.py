@@ -38,33 +38,33 @@ config = {'delta_time':0,
 
 class MainHandler(tornado.web.RequestHandler):
     """Handler for server root."""
-   
+
     def get(self, ):
-        print "Root get."
+        print("Root get.")
         tl_running = False
         if not timelapse == None:
             if timelapse.is_alive():
                 tl_running = True
         if tl_running:
-            print "timelapse"
+            print("timelapse")
             self.render("timelapse.html")
         else:
-            print "configure"
+            print("configure")
             self.render("configure.html", config=json.dumps(config))
-        
+
 class TimelapseHandler(tornado.web.RequestHandler):
     """Handler for starting a timelapse."""
-        
+
     def get(self, ):
         global timelapse
         if not timelapse == None:
             if not timelapse.is_alive():
                 timelapse = None
         if timelapse == None:
-            print "Starting timelapse."
+            print("Starting timelapse.")
             self.__start_timelapse()
         self.render("timelapse.html")
-              
+
     def __start_timelapse(self, ):
         global timelapse
         if not timelapse == None:
@@ -76,30 +76,30 @@ class TimelapseHandler(tornado.web.RequestHandler):
             'total_imgs': config['total_imgs'],
             })
         timelapse.start()
-        
+
     def __stop_timelapse(self, ):
         global timelapse
         if not timelapse == None:
             timelapse.stop()
             timelapse = None
-            
+
 class TimelapseStatusHandler(tornado.websocket.WebSocketHandler):
     """Serve up timelapse status via websocket."""
-    
+
     def initialize(self, ):
         self.status_loop = None
-    
+
     def open(self, ):
         """Callback for when websocket is opened."""
         self.status_loop = tornado.ioloop.PeriodicCallback(self.send_status, 500)
         self.status_loop.start()
-    
+
     def on_close(self, ):
         """Callback for when websocket is closed."""
         if not self.status_loop == None:
             self.status_loop.stop()
             self.status_loop = None
-    
+
     def send_status(self, ):
         if timelapse == None:
             return
@@ -113,29 +113,29 @@ class TimelapseStatusHandler(tornado.websocket.WebSocketHandler):
                             )
         else:
             camera.disp_msg('  Timelapse   '+\
-                            '    DONE      ')            
+                            '    DONE      ')
         self.write_message(json.dumps(status))
 
 class TimelapseCancelHandler(tornado.web.RequestHandler):
     """Cancel timelapse if running and redirect to configuration."""
-    
+
     def get(self, ):
         if not timelapse == None:
             timelapse.stop();
             timelapse.join();
             self.redirect("/");
-    
+
 class AjaxConfig(tornado.web.RequestHandler):
     """Handle AJAX for configuration."""
-    
+
     def post(self, ):
-        print "Updating config."
+        print("Updating config.")
         json_data = json.loads(self.request.body)
         resp = self.__process_json(json_data)
         for k in config:
             camera.set_cam_config(setting=k, value=config[k])
         self.write(resp)
-        
+
     def __process_json(self, json_data):
         try:
             config['delta_time'] = int(json_data['delta_time'])
@@ -156,19 +156,19 @@ class AjaxConfig(tornado.web.RequestHandler):
         resp_data = config
         resp_data['total_time'] = self.__total_time_str()
         return json.dumps(resp_data)
-    
+
     def __total_time_str(self, ):
         total_secs = config['delta_time'] * config['total_imgs']
         hours = total_secs / 3600
         minutes = (total_secs % 3600) / 60
         seconds = total_secs % 60
-        return "{:2}:{:02}:{:02}".format(hours,minutes,seconds) 
-    
+        return "{:2}:{:02}:{:02}".format(hours,minutes,seconds)
+
 class AjaxCapture(tornado.web.RequestHandler):
     """Handle AJAX for image capture."""
 
     def post(self, ):
-        print "Capturing image."
+        print("Capturing image.")
         filename = 'static/preview.jpg'
         camera.capture_with_histogram(filename)
         url = "{0}?{1}".format(filename, time.time())  # prevent using cached image
@@ -179,15 +179,15 @@ class AjaxSetDate(tornado.web.RequestHandler):
     """Handle AJAX for setting time and date."""
 
     def post(self, ):
-        print "Setting date."
+        print("Setting date.")
         json_data = json.loads(self.request.body)
         os.system('date -s "{}"'.format(json_data['date']))
 
 class MJPEGStream(tornado.web.RequestHandler):
     """Handler for serving a MJPEG stream."""
-    
+
     def post(self, ):
-        print "mjpegstream post"
+        print("mjpegstream post")
         json_data = json.loads(self.request.body)
         command = json_data['command']
         resp = {}
@@ -195,25 +195,25 @@ class MJPEGStream(tornado.web.RequestHandler):
             camera.mjpegstream_start()
             addr = self.request.host.partition(":")[0]
             resp['url'] = "http://" + addr + ":8081/"
-            print "START"
+            print("START")
         elif "STOP" in command.upper():
             camera.mjpegstream_stop()
-            print "STOP"
+            print("STOP")
         self.write(json.dumps(resp))
-        
+
 class PowerDownHandler(tornado.web.RequestHandler):
     """Handler for powering down the system."""
-    
+
     def get(self, ):
         self.render("powerdown.html")
         camera.disp_msg("BYE BYE")
-        print "BYE BYE"
+        print("BYE BYE")
         time.sleep(5)
         os.system("sudo halt")
-        
+
 class MainServerApp(tornado.web.Application):
     """Main Server application."""
-    
+
     def __init__(self):
         handlers = [
             (r"/",                  MainHandler),
@@ -222,25 +222,25 @@ class MainServerApp(tornado.web.Application):
             (r"/cancel",            TimelapseCancelHandler),
             (r"/ajaxconfig",        AjaxConfig),
             (r"/capture",           AjaxCapture),
-            (r"/mjpegstream",       MJPEGStream),   
+            (r"/mjpegstream",       MJPEGStream),
             (r"/setdate",           AjaxSetDate),
-            (r"/powerdown",         PowerDownHandler),   
+            (r"/powerdown",         PowerDownHandler),
         ]
-        
+
         settings = {
             "static_path": os.path.join(os.path.dirname(__file__), "static"),
             "template_path": os.path.join(os.path.dirname(__file__), "templates"),
         }
-        
+
         tornado.web.Application.__init__(self, handlers, **settings)
 
 #--------------------------------------------------------------------
-# M A I N 
+# M A I N
 #--------------------------------------------------------------------
 if __name__ == '__main__':
     tornado.httpserver.HTTPServer(MainServerApp()).listen(PORT)
-    print "Server started on port {0}.".format(PORT)
+    print("Server started on port {0}.".format(PORT))
     camera.disp_msg('              '+\
                     '    SERVER    '+\
-                    '    STARTED   ') 
+                    '    STARTED   ')
     tornado.ioloop.IOLoop.instance().start()

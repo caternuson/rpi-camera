@@ -12,7 +12,7 @@
 #       http://winty5.wix.com/noahtheawesome
 #       Note of the author:
 #       Free for personal and commercial uses
-# 
+#
 # 2014-10-30
 # Carter Nelson
 #===========================================================================
@@ -58,11 +58,11 @@ LCD_DRAW  = ImageDraw.Draw(LCD_IMAGE)
 
 # Display locations
 WHOLE_SCREEN    = ((0,0),(LCD.LCDWIDTH, LCD.LCDHEIGHT))
-BIG_MSG         = (0,12)         
+BIG_MSG         = (0,12)
 
 class Campi():
     """A class to provide an interface to the campi hardware."""
-        
+
     def __init__(self):
         """Constructor."""
         self.settings = {}
@@ -80,7 +80,7 @@ class Campi():
         self.settings['hvflip'] = (True, True)         # horizontal/vertical flip
         self.settings['quality'] = 100                 # 0 - 100, applies only to JPGs
         self.settings['awb_gains'] = None
- 
+
         self._disp = LCD.PCD8544(LCD_DC,
                                  LCD_RST,
                                  spi=SPI.SpiDev(LCD_SPI_PORT,
@@ -90,19 +90,19 @@ class Campi():
         self._disp.begin(contrast=LCD_CONTRAST)
         self._disp.clear()
         self._disp.display()
-        
+
         self._mjpegger = None
-        
+
         self._gpio = GPIO
         self._gpio.setwarnings(False)
         self._gpio.setmode(GPIO.BCM)
         for B in BUTTONS:
             GPIO.setup(B, GPIO.IN , pull_up_down=GPIO.PUD_UP)
         GPIO.setup(LCD_LED, GPIO.OUT, initial=GPIO.LOW)
-  
+
     #---------------------------------------------------------------
     #                   C  A  M  E  R  A
-    #---------------------------------------------------------------        
+    #---------------------------------------------------------------
     def capture(self, filename):
         """Capture an image using current settings and save to the specified
         filename.
@@ -111,7 +111,7 @@ class Campi():
             camera = self.__update_camera(camera=camera)
             camera.capture(filename, quality=self.settings['quality'])
             self.__update_settings(camera)
-                                                                   
+
     def capture_stream(self, ios=None, size=(400,225)):
         """Capture an image to the specified IO stream. Image size can
         also be specified."""
@@ -120,32 +120,32 @@ class Campi():
         with PiCamera(sensor_mode=5) as camera:
             camera = self.__update_camera(camera=camera, use_video_port=True)
             camera.capture(ios, 'jpeg', use_video_port=True, resize=size)
-    
+
     def mjpegstream_start(self, port=8081, resize=(640,360)):
         """Start thread to serve MJPEG stream on specified port."""
         if not self._mjpegger == None:
             return
-        camera = self.__update_camera(camera=PiCamera(sensor_mode=5))        
+        camera = self.__update_camera(camera=PiCamera(sensor_mode=5))
         kwargs = {'camera':camera, 'port':port, 'resize':resize}
         self._mjpegger = mjpegger.MJPEGThread(kwargs=kwargs)
         self._mjpegger.start()
         while not self._mjpegger.streamRunning:
             pass
-    
+
     def mjpegstream_stop(self, ):
         """Stop the MJPEG stream, if running."""
         if not self._mjpegger == None:
             if self._mjpegger.is_alive():
                 self._mjpegger.stop()
             self._mjpegger = None
-                
+
     def mjpgstream_is_alive(self, ):
         """Return True if stream is running, False otherwise."""
         if self._mjpegger == None:
             return False
         else:
             return self._mjpegger.is_alive()
-                        
+
     def capture_with_histogram(self, filename, fill=False):
         """Capture an image with histogram overlay and save to specified file.
         If fill=True, the area under the histogram curves will be filled.
@@ -168,7 +168,7 @@ class Campi():
         draw.line([(x2,0),(x2,height)], width=3)
         draw.line([(0,y1),(width,y1)], width=3)
         draw.line([(0,y2),(width,y2)], width=3)
-        
+
         # compute histogram, scaled for image size
         hist = im_in.histogram()
         rh = hist[0:256]
@@ -182,8 +182,8 @@ class Campi():
         for i in xrange(256):
             rl.append((int(i*xs),height-int(rh[i]*ys)))
             gl.append((int(i*xs),height-int(gh[i]*ys)))
-            bl.append((int(i*xs),height-int(bh[i]*ys)))        
-        
+            bl.append((int(i*xs),height-int(bh[i]*ys)))
+
         # draw it
         lw = int((0.01*max(im_out.size)))
         if (fill):
@@ -196,7 +196,7 @@ class Campi():
         draw.line(rl, fill='red', width=lw)
         draw.line(gl, fill='green', width=lw)
         draw.line(bl, fill='blue', width=lw)
-        
+
         # add image info
         font = ImageFont.truetype("5Identification-Mono.ttf",72)
         fw,fh = font.getsize(" ")
@@ -216,7 +216,7 @@ class Campi():
         # save it and clean up
         im_out.save(filename, quality=95)
         os.remove(hname)
-        
+
     def set_cam_config(self, setting=None, value=None):
         """Set the specified camera setting to the supplied value."""
         if value == None:
@@ -230,7 +230,7 @@ class Campi():
             self.__set_framerate(value)
             return
         self.settings[setting] = value
-        
+
     def __set_shutter_speed(self, value=None):
         """Setting shutter speed manually requires some effort. The acceptable
         values are limited by the sensor_mode and frame_rate. Here, those values
@@ -255,7 +255,7 @@ class Campi():
             self.settings['sensor_mode'] = 0
             self.settings['exposure_mode'] = 'auto'
             self.settings['shutter_speed'] = value
-            
+
     def __set_framerate(self, value=None):
         """Framerate is tied to shutter_speed. Priority is given to shutter
         speed if in manual mode.
@@ -265,8 +265,8 @@ class Campi():
             self.settings['framerate'] = Fraction(1.e6/self.settings['shutter_speed'])
         else:
             # auto mode, so just set it
-            self.settings['framerate'] = value 
-            
+            self.settings['framerate'] = value
+
     def __update_camera(self, camera=None, use_video_port=False):
         """Update the Raspberry Pi Camera Module with the current settings.
         Basically a mapping of this class's member variables to the ones used
@@ -300,7 +300,7 @@ class Campi():
             camera.framerate = Fraction(30,1)
             camera.exposure_mode = 'auto'
         return camera
-    
+
     def __update_settings(self, camera=None):
         """Update dictionary of settings with actual values from supplied
         camera object."""
@@ -318,33 +318,33 @@ class Campi():
         self.settings['contrast'] = camera.contrast
         self.settings['sharpness'] = camera.sharpness
         self.settings['saturation'] = camera.saturation
-        self.settings['hvflip'] = (camera.hflip,camera.vflip)            
-    
+        self.settings['hvflip'] = (camera.hflip,camera.vflip)
+
     #---------------------------------------------------------------
     #                  D  I  S  P  L  A  Y
     #---------------------------------------------------------------
     def LCD_LED_On(self):
         """Enable power to LCD display."""
         self._gpio.output(LCD_LED, GPIO.HIGH)
-        
+
     def LCD_LED_Off(self):
         """Disable power to LCD display."""
         self._gpio.output(LCD_LED, GPIO.LOW)
-        
+
     def disp_clear(self):
         """Clear the display."""
         self._disp.clear()
         self._disp.display()
-    
+
     def disp_image(self, image):
         """Display the supplied image."""
         self._disp.image(image)
         self._disp.display()
-        
+
     def get_lcd_size(self):
         """Return the width and height of the LCD screen as a tuple."""
         return (LCD.LCDWIDTH, LCD.LCDHEIGHT)
-    
+
     def disp_msg(self, msg, font=FONT_SMALL):
         """Display the supplied message on the screen. An optional
         font can be supplied.
@@ -354,14 +354,14 @@ class Campi():
         cy = LCD.LCDHEIGHT / fh      # max number of lines
 
         lines = [ msg[i:i+cx] for i in range(0, len(msg), cx) ]
-        
+
         LCD_DRAW.rectangle(WHOLE_SCREEN, outline=255, fill=255)
         y = 0
         for line in lines:
             LCD_DRAW.text((0,y), line, font=FONT_SMALL)
             y += fh
         self.disp_image(LCD_IMAGE)
-        
+
     def disp_big_msg(self, msg, location=BIG_MSG):
         """Display the supplied message on the screen using large text.
         An optional location can be specified.
@@ -369,7 +369,7 @@ class Campi():
         LCD_DRAW.rectangle(WHOLE_SCREEN, outline=255, fill=255)
         LCD_DRAW.text(location, msg, font=FONT_LARGE)
         self.disp_image(LCD_IMAGE)
-               
+
     #---------------------------------------------------------------
     #                  B  U  T  T  O  N  S
     #---------------------------------------------------------------
@@ -380,12 +380,12 @@ class Campi():
                     self._gpio.input(BTN_DOWN),
                     self._gpio.input(BTN_LEFT),
                     self._gpio.input(BTN_RIGHT),
-                    self._gpio.input(BTN_SEL))     
+                    self._gpio.input(BTN_SEL))
         elif (btn in BUTTONS):
             return self._gpio.input(btn)
         else:
             return None
-            
+
     def is_pressed(self, btn=None):
         """Return True if specified button is pressed. False otherwise."""
         if (btn in BUTTONS):
@@ -395,16 +395,16 @@ class Campi():
                 return False
         else:
             return None
-        
+
     def get_buttons(self, ):
         """Return a dictionary of button state."""
         state = {}
         for B in BUTTONS:
             state[B] = self.is_pressed(B)
         return state
-   
+
 #--------------------------------------------------------------------
-# M A I N 
+# M A I N
 #--------------------------------------------------------------------
 if __name__ == '__main__':
-    print "I'm just a class, nothing to do..."
+    print("I'm just a class, nothing to do...")

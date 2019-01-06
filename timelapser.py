@@ -12,16 +12,16 @@ import os
 
 class TimeLapser(threading.Thread):
     """A class for performing timelapse capture in a separate thread."""
-    
+
     def __init__(self, group=None, target=None, name=None, args=(), kwargs=None):
         threading.Thread.__init__(self, group=group, target=target, name=name)
 
         self.dir = None
-        
+
         self.camera = kwargs['camera']
         self.delta_time = kwargs['delta_time']
         self.total_imgs = kwargs['total_imgs']
-        
+
         self.start_time = None
         self.finish_time = None
         self.wait_time = None
@@ -30,8 +30,8 @@ class TimeLapser(threading.Thread):
         self.keep_running = False
         self.timelapse_name = None
         self.waiter = threading.Event()
-        
-    def run(self, ):
+
+    def run(self):
         """Take a series of images."""
         self.timelapse_name = time.strftime("%Y%m%d_%H%M",time.localtime())
         self.dir = os.path.join(os.getcwd(), self.timelapse_name)
@@ -55,14 +55,14 @@ class TimeLapser(threading.Thread):
             for k in self.camera.settings:
                 txt = "{0} = {1}\n".format(k,self.camera.settings[k])
                 file.write(txt)
-            
+
         self.start_time  = time.time()
         self.remaining_time = self.delta_time * (self.total_imgs - 1)
         self.finish_time = self.start_time + self.remaining_time
 
         self.keep_running = True
         self.image_count = 0
-        
+
         while self.keep_running:
             self.image_count += 1
             filename = self.timelapse_name+"_%04d.jpg" % self.image_count
@@ -78,18 +78,18 @@ class TimeLapser(threading.Thread):
                 self.keep_running = False
                 self.remaining_time = 0
                 self.wait_time = 0
-            while self.keep_running and self.wait_time > 0: 
-                self.wait_time = self.delta_time - (time.time() - acquire_start) 
+            while self.keep_running and self.wait_time > 0:
+                self.wait_time = self.delta_time - (time.time() - acquire_start)
                 self.remaining_time = self.wait_time + self.delta_time * remaining_imgs
-                self.waiter.wait(0.25)                        
+                self.waiter.wait(0.25)
         self.keep_running = False
-                
-    def stop(self, ):
+
+    def stop(self):
         """Stop the timelapse and terminate the thread."""
         self.keep_running = False
-        self.waiter.set()       
-      
-    def get_status(self, ):
+        self.waiter.set()
+
+    def get_status(self):
         """Return current status of timelapse."""
         return {
             'timelapse_name'    : self.timelapse_name ,

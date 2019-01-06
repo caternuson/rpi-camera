@@ -1,6 +1,6 @@
 # rpi-camera
 ![thumbnail](http://caternuson.github.io/rpi-camera/static/rpi-camera-thumb.jpg)<br/>
-Python 2.7 software for Raspberry Pi based camera.
+Python 3.x software for Raspberry Pi based camera.
 
 # Hardware
 A wiring diagram can be found in the **/doc** folder. Here is a list of the
@@ -57,9 +57,9 @@ sudo make install
 * this should put the files **hostapd** and **hostapd_cli** in **/usr/local/bin**
 * rename existing hostapd and add links to custom build
 ```
-sudo mv /usr/sbin/hostapd /usr/sbin/hostapd.bak 
-sudo ln -s /usr/local/bin/hostapd /usr/sbin/hostapd 
-sudo chown root:root /usr/sbin/hostapd 
+sudo mv /usr/sbin/hostapd /usr/sbin/hostapd.bak
+sudo ln -s /usr/local/bin/hostapd /usr/sbin/hostapd
+sudo chown root:root /usr/sbin/hostapd
 sudo chmod 755 /usr/sbin/hostapd
 ```
 * then configure by editting the file **/etc/hostapd/hostapd.conf** to have

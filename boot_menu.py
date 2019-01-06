@@ -42,11 +42,11 @@ menu['4'] = MENU4
 def clear_cursor():
     for key in cursor:
         cursor[key]= BLANK
-        
+
 def set_cursor():
     clear_cursor()
-    cursor['%i'%selection] = CHECKED 
-        
+    cursor['%i'%selection] = CHECKED
+
 def update_menu():
     set_cursor()
     msg = ''
@@ -69,11 +69,11 @@ while True:
         if (selection>4):
             selection = 1
     if (button_state[campi.BTN_SEL]):
-        print 'selection = %i' % selection
+        print('selection = %i' % selection)
         if (selection==1):
             # start access point and time lapse web server
             camera.disp_msg(' access point '+\
-                            ' starting.... ')            
+                            ' starting.... ')
             os.system('python /home/pi/start_ap.py')
             os.system('cd /home/pi/rpi-camera')
             os.system('python /home/pi/rpi-camera/camera_server.py')
@@ -90,5 +90,5 @@ while True:
             pass
         camera.disp_msg('     DONE')
         exit()
-    update_menu()    
+    update_menu()
     time.sleep(0.1)
