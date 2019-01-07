@@ -28,7 +28,7 @@ class MJPEGThread(threading.Thread):
         self.streamRunning = False
         self.server = None
 
-    def run(self, ):
+    def run(self):
         print("MJPEGThread starting")
         # self.server = SocketServer.TCPServer(("",self.port), MJPEGStreamHandler,
         #     bind_and_activate=False)
@@ -54,7 +54,7 @@ class MJPEGThread(threading.Thread):
 class MJPEGStreamHandler(SimpleHTTPRequestHandler):
     """Handler for MJPEG stream."""
 
-    def do_GET(self, ):
+    def do_GET(self):
         print("MJPEGStreamHandler GET")
         global keepStreaming
         keepStreaming = True
@@ -69,7 +69,7 @@ class MJPEGStreamHandler(SimpleHTTPRequestHandler):
                                                     resize = resize):
             if not keepStreaming:
                 break
-            self.wfile.write("--picameramjpg")
+            self.wfile.write(b"--picameramjpg\n")
             self.send_header('Content-type','image/jpeg')
             self.send_header('Content-length',len(stream.getvalue()))
             self.end_headers()

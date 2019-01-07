@@ -68,7 +68,7 @@ class TimelapseHandler(tornado.web.RequestHandler):
     def __start_timelapse(self, ):
         global timelapse
         if not timelapse == None:
-            if timelapse.t.is_alive():
+            if timelapse.is_alive():
                 return
         timelapse = timelapser.TimeLapser(kwargs={
             'camera': camera,
