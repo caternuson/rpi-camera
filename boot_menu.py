@@ -59,33 +59,32 @@ def update_menu():
 # MAIN
 #===========================
 while True:
-    button_state = camera.get_buttons()
-    if (button_state[campi.BTN_UP]):
+    if camera.button_up:
         selection -= 1
-        if (selection<1):
+        if selection < 1:
             selection = 4
-    if (button_state[campi.BTN_DOWN]):
+    if camera.button_down:
         selection += 1
-        if (selection>4):
+        if  selection > 4:
             selection = 1
-    if (button_state[campi.BTN_SEL]):
+    if camera.button_sel:
         print('selection = %i' % selection)
-        if (selection==1):
+        if selection == 1:
             # start access point and time lapse web server
             camera.disp_msg(' access point '+\
                             ' starting.... ')
-            os.system('python /home/pi/start_ap.py')
-            os.system('cd /home/pi/rpi-camera')
-            os.system('python /home/pi/rpi-camera/camera_server.py')
-        if (selection==2):
+            os.system('sudo systemctl start wpa_supplicant@ap0.service')
+            os.system('cd /home/pi/photos')
+            os.system('python3 /home/pi/rpi-camera/camera_server.py')
+        elif selection == 2:
             # start home wifi
             camera.disp_msg(' home wifi    '+\
                             ' starting.... ')
-            os.system('python /home/pi/start_homewifi.py')
-        if (selection==3):
+            os.system('sudo systemctl start wpa_supplicant@wlan0.service')
+        elif selection == 3:
             # do nothing, just exit
             pass
-        if (selection==4):
+        elif selection == 4:
             # do nothing, just exit
             pass
         camera.disp_msg('     DONE')

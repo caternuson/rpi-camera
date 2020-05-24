@@ -25,9 +25,6 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-#import RPi.GPIO as GPIO
-#import Adafruit_Nokia_LCD as LCD
-#import Adafruit_GPIO.SPI as SPI
 import board
 import busio
 from digitalio import DigitalInOut, Direction, Pull
@@ -47,12 +44,10 @@ BTN_SEL             =   board.D21      # Select (push)
 
 # GPIO pins for Nokia LCD display control
 LCD_DC              =   board.D23      # Nokia LCD display D/C
-LCD_CS              =   board.D8
+LCD_CS              =   board.D8       # Nokia LCD display CS
 LCD_RST             =   board.D24      # Nokia LCD displat Reset
 LCD_LED             =   board.D22      # LCD LED enable pin (HIGH=ON, LOW=OFF)
 LCD_CONTRAST        =   50      # LCD contrast 0-100
-# LCD_SPI_PORT        =   0       # Hardware SPI port to use
-# LCD_SPI_DEVICE      =   0       # Hardware SPI device (determines chip select pin used)
 
 # Load fonts
 FONT_SMALL = ImageFont.load_default()
@@ -87,29 +82,18 @@ class Campi():
         self.settings['quality'] = 100                 # 0 - 100, applies only to JPGs
         self.settings['awb_gains'] = None
 
-        # self._disp = LCD.PCD8544(LCD_DC,
-        #                          LCD_RST,
-        #                          spi=SPI.SpiDev(LCD_SPI_PORT,
-        #                                         LCD_SPI_DEVICE,
-        #                                         max_speed_hz=4000000)
-        #                          )
-        # self._disp.begin(contrast=LCD_CONTRAST)
-        # self._disp.clear()
-        # self._disp.display()
-
         self._disp = LCD.PCD8544( SPI,
                                   DigitalInOut(LCD_DC),
                                   DigitalInOut(LCD_CS),
                                   DigitalInOut(LCD_RST) )
+        self._disp.invert = True
+        self._disp.contrast = 50
+        self._lcd_led = DigitalInOut(LCD_LED)
+        self._lcd_led.direction = Direction.OUTPUT
+        self._lcd_led.value = False
 
         self._mjpegger = None
 
-        # self._gpio = GPIO
-        # self._gpio.setwarnings(False)
-        # self._gpio.setmode(GPIO.BCM)
-        # for B in BUTTONS:
-        #     GPIO.setup(B, GPIO.IN , pull_up_down=GPIO.PUD_UP)
-        # GPIO.setup(LCD_LED, GPIO.OUT, initial=GPIO.LOW)
         self._button_up = DigitalInOut(BTN_UP)
         self._button_down = DigitalInOut(BTN_DOWN)
         self._button_left = DigitalInOut(BTN_LEFT)
@@ -238,7 +222,7 @@ class Campi():
             N += 1
 
         # save it and clean up
-        im_out.save(filename, quality=95)
+        im_out.convert(mode="RGB").save(filename, quality=95)
         os.remove(hname)
 
     def set_cam_config(self, setting=None, value=None):
@@ -349,11 +333,11 @@ class Campi():
     #---------------------------------------------------------------
     def LCD_LED_On(self):
         """Enable power to LCD display."""
-        #self._gpio.output(LCD_LED, GPIO.HIGH)
+        self._lcd_led.value = True
 
     def LCD_LED_Off(self):
         """Disable power to LCD display."""
-        #self._gpio.output(LCD_LED, GPIO.LOW)
+        self._lcd_led.value = False
 
     def disp_clear(self):
         """Clear the display."""
@@ -379,10 +363,10 @@ class Campi():
 
         lines = [ msg[i:i+cx] for i in range(0, len(msg), cx) ]
 
-        LCD_DRAW.rectangle(WHOLE_SCREEN, outline=255, fill=255)
+        LCD_DRAW.rectangle(WHOLE_SCREEN, outline=0, fill=0)
         y = 0
         for line in lines:
-            LCD_DRAW.text((0,y), line, font=FONT_SMALL)
+            LCD_DRAW.text((0,y), line, font=FONT_SMALL, fill=255)
             y += fh
         self.disp_image(LCD_IMAGE)
 
@@ -390,8 +374,8 @@ class Campi():
         """Display the supplied message on the screen using large text.
         An optional location can be specified.
         """
-        LCD_DRAW.rectangle(WHOLE_SCREEN, outline=255, fill=255)
-        LCD_DRAW.text(location, msg, font=FONT_LARGE)
+        LCD_DRAW.rectangle(WHOLE_SCREEN, outline=0, fill=0)
+        LCD_DRAW.text(location, msg, font=FONT_LARGE, fill=255)
         self.disp_image(LCD_IMAGE)
 
     #---------------------------------------------------------------
@@ -403,53 +387,23 @@ class Campi():
 
     @property
     def button_up(self):
-        return self._button_up.value
+        return not self._button_up.value
 
     @property
     def button_down(self):
-        return self._button_down.value
+        return not self._button_down.value
 
     @property
     def button_left(self):
-        return self._button_left.value
+        return not self._button_left.value
 
     @property
     def button_right(self):
-        return self._button_right.value
+        return not self._button_right.value
 
     @property
     def button_sel(self):
-        return self._button_sel.value
-
-    # def __get_raw_button(self, btn=None):
-    #     """Return the state of all buttons or specified button."""
-    #     if (btn==None):
-    #         return (self._gpio.input(BTN_UP),
-    #                 self._gpio.input(BTN_DOWN),
-    #                 self._gpio.input(BTN_LEFT),
-    #                 self._gpio.input(BTN_RIGHT),
-    #                 self._gpio.input(BTN_SEL))
-    #     elif (btn in BUTTONS):
-    #         return self._gpio.input(btn)
-    #     else:
-    #         return None
-
-    # def is_pressed(self, btn=None):
-    #     """Return True if specified button is pressed. False otherwise."""
-    #     if (btn in BUTTONS):
-    #         if (self.__get_raw_button(btn)==0):
-    #             return True
-    #         else:
-    #             return False
-    #     else:
-    #         return None
-
-    # def get_buttons(self, ):
-    #     """Return a dictionary of button state."""
-    #     state = {}
-    #     for B in BUTTONS:
-    #         state[B] = self.is_pressed(B)
-    #     return state
+        return not self._button_sel.value
 
 #--------------------------------------------------------------------
 # M A I N
