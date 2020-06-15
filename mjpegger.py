@@ -1,7 +1,7 @@
 #===========================================================================
 # mjpegger.py
 #
-# Runs a MJPG stream on provided port.
+# Runs a MJPEG stream on provided port with provided camera object.
 #
 # 2016-07-25 (original)
 # 2020-06-14 (update)
