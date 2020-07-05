@@ -114,3 +114,22 @@ class TimeLapser(threading.Thread):
     @length.setter
     def length(self, val):
         self._length = val
+
+    #------------------------------------------------------
+    # READ ONLY properties
+    #------------------------------------------------------
+    @property
+    def time_remaining(self):
+        return self._time_to_finish
+
+    @property
+    def time_to_next(self):
+        return self._time_to_next
+
+    @property
+    def images_remaining(self):
+        return self._remaining
+
+    @property
+    def images_taken(self):
+        return self._taken

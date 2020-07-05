@@ -187,6 +187,13 @@ class Campi():
         self._timelapse_thread.stop()
         self._timelapse_thread = None
 
+    @property
+    def timelapse_running(self):
+        if self._timelapse_thread:
+            return self._timelapse_thread.is_alive()
+        else:
+            return False
+
     def start_mjpeg_stream(self, **kwargs):
         """Start serving an MJPEG stream on specified port."""
         if self._mjpeg_thread:

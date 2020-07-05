@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Timelapse: Status</title>
+  <link href={{ static_url("css/font-awesome.min.css") }} rel="stylesheet">
+  <link href={{ static_url("css/bootstrap.min.css") }} rel="stylesheet">
+  <script src={{ static_url("js/jquery.min.js") }}></script>
+  <script src={{ static_url("js/bootstrap.min.js") }}></script>
+</head>
+<body>
+  <ul class="nav nav-tabs">
+    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab_tl_config"><span class="fa fa-clock-o"></span></a></li>
+    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab_cam_config"><span class="fa fa-camera"></span></a></li>
+    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab_liveview"><span class="fa fa-video-camera"></span></a></li>
+  </ul>
+  <div class="tab-content">
+  <!----------------------------------------------------------------------
+                       T I M E L A P S E     S E T U P
+  ----------------------------------------------------------------------->
+  <div id="tab_tl_config" class="tab-pane active">
+    TIMELAPSE
+  </div>
+  <!----------------------------------------------------------------------
+                          C A M E R A     S E T U P
+  ----------------------------------------------------------------------->
+  <div id="tab_cam_config" class="tab-pane">
+    <label for="shutter_speed">SHUTTER SPEED</label>
+    <select id="shutter_speed" class="form-control" value=0>
+      <option value='0'       >AUTO</option>
+      <option value='2000000' >2'</option>
+      <option value='1000000' >1'</option>
+      <option value='500000'  >1/2</option>
+      <option value='250000'  >1/4</option>
+      <option value='125000'  >1/8</option>
+      <option value='62500'   >1/16</option>
+      <option value='31250'   >1/32</option>
+      <option value='15625'   >1/64</option>
+      <option value='7813'    >1/128</option>
+      <option value='3906'    >1/256</option>
+      <option value='1953'    >1/512</option>
+      <option value='978'     >1/1024</option>
+      <option value='489'     >1/2048</option>
+      <option value='400'     >400us</option>
+      <option value='350'     >350us</option>
+      <option value='300'     >300us</option>
+      <option value='250'     >250us</option>
+      <option value='200'     >200us</option>
+      <option value='150'     >150us</option>
+      <option value='100'     >100us</option>
+    </select>
+    <label for="iso">ISO</label>
+    <select id="iso" class="form-control" value=0>
+        <option value='0'   >AUTO</option>
+        <option value='100' >100</option>
+        <option value='200' >200</option>
+        <option value='320' >320</option>
+        <option value='400' >400</option>
+        <option value='500' >500</option>
+        <option value='640' >640</option>
+        <option value='800' >800</option>
+    </select>
+    <p>
+    <div class="text-center">
+    <button id="take" type="button" class="btn btn-success btn-lg">
+      <span class="fa fa-camera"></span> TAKE
+    </button>
+    </div>
+    </p>
+    <img id="preview" class="img-fluid mx-auto d-block" src="static/spinner.gif"/>
+  </div>
+  <!----------------------------------------------------------------------
+                         L I V E    P R E V I E W
+  ----------------------------------------------------------------------->
+  <div id="tab_liveview" class="tab-pane">
+    <img id="liveview" class="img-fluid mx-auto d-block" src="static/test_pattern.jpg"/>
+    <br/><br/>
+  </div>
+  </div>
+<script>
+  // on page load
+  $(document).ready(function () {
+    $("#shutter_speed").change(function (event) {
+        send_config()
+      })
+      $("#iso").change(function (event) {
+        send_config()
+      })
+      $("#take").click(function (event) {
+        return get_preview()
+      })
+  })
+
+  // send current camera configuration settings
+  function send_config() {
+    json_data = JSON.stringify({
+      command: "update_config",
+      shutter_speed: $("#shutter_speed").val(),
+      iso: $("#iso").val(),
+    })
+    $.ajax({
+      url : '/',
+      method : 'POST',
+      data: json_data,
+    })
+  }
+
+  // take preview still image
+  function get_preview() {
+    $("#preview").attr("src","static/spinner.gif");
+    json_data = JSON.stringify({command : "get_preview"});
+    $.ajax({
+      url : '/',
+      method : 'POST',
+      data: json_data,
+      success: function(json_resp, status) {
+        resp = JSON.parse(json_resp)
+        $("#preview").attr("src", resp['url'])
+      }
+    })
+    return true
+  }
+
+  // start live view
+  $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    if ($(e.target).attr("href") === "#tab_liveview") {
+      json_data = JSON.stringify({command : "start_liveview"});
+      $.ajax({
+        url: '/',
+        method: 'POST',
+        data: json_data,
+        success: function(json_resp) {
+          resp = JSON.parse(json_resp);
+          stream_url = resp['url'];
+          $("#liveview").attr("src", stream_url);
+        }
+      })
+    }
+  })
+
+  // stop live view
+  $('a[data-toggle="tab"]').on('hide.bs.tab', function (e) {
+    if ($(e.target).attr("href") === "#tab_liveview") {
+    json_data = JSON.stringify({command : "stop_liveview"});
+    $.ajax({
+        url: '/',
+        method: 'POST',
+        data: json_data,
+        success: function(json_resp, status) {
+        $("#liveview").attr("src", "static/test_pattern.jpg");
+        }
+    })
+    }
+  })
+</script>
+</body>
+</html>
