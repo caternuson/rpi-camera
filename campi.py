@@ -188,11 +188,19 @@ class Campi():
         self._timelapse_thread = None
 
     @property
-    def timelapse_running(self):
+    def timelapse_status(self):
         if self._timelapse_thread:
-            return self._timelapse_thread.is_alive()
+            status = {
+                "tl_running" : self._timelapse_thread.is_alive(),
+                "time_remaining" : self._timelapse_thread.time_remaining,
+                "time_to_next" : self._timelapse_thread.time_to_next,
+                "images_taken" : self._timelapse_thread.images_taken,
+            }
         else:
-            return False
+            status = {
+                "tl_running" : False
+            }
+        return status
 
     def start_mjpeg_stream(self, **kwargs):
         """Start serving an MJPEG stream on specified port."""

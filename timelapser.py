@@ -85,8 +85,8 @@ class TimeLapser(threading.Thread):
                 self._time_to_next = 0
             # wait interval
             while self.keep_running and self._time_to_next > 0:
-                self._time_to_next = self._interval - (time.time() - acquire_start)
-                self._time_to_finish = self._time_to_next + self._interval * self._remaining
+                self._time_to_next = max(0, self._interval - (time.time() - acquire_start))
+                self._time_to_finish = max(0, self._time_to_next + self._interval * self._remaining)
                 self._waiter.wait(0.25)
 
         # all done

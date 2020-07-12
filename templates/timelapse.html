@@ -9,58 +9,39 @@
   <script src={{ static_url("js/jquery.min.js") }}></script>
   <script src={{ static_url("js/bootstrap.min.js") }}></script>
 </head>
+
 <body>
   <ul class="nav nav-tabs">
-    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab_tl_config"><span class="fa fa-clock-o"></span></a></li>
-    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab_cam_config"><span class="fa fa-camera"></span></a></li>
-    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab_liveview"><span class="fa fa-video-camera"></span></a></li>
+    <li class="nav-item"><a id="li_tl_config" class="nav-link active" data-toggle="tab" href="#tab_tl_config"><span class="fa fa-clock-o"></span></a></li>
+    <li class="nav-item"><a id="li_cam_config" class="nav-link" data-toggle="tab" href="#tab_cam_config"><span class="fa fa-camera"></span></a></li>
+    <li class="nav-item"><a id="li_liveview" class="nav-link" data-toggle="tab" href="#tab_liveview"><span class="fa fa-video-camera"></span></a></li>
   </ul>
   <div class="tab-content">
   <!----------------------------------------------------------------------
                        T I M E L A P S E     S E T U P
   ----------------------------------------------------------------------->
   <div id="tab_tl_config" class="tab-pane active">
-    TIMELAPSE
+    <label for="delta_time">DELTA TIME (secs)</label>
+    <input id="delta_time" class="form-control" type="number" value="0"/>
+    <label for="total_imgs">NUMBER OF IMAGES</label>
+    <input id="total_imgs" class="form-control" type="number" value="0"/>
+    <p>
+    <div id="tl_summary" class="alert alert-info text-center text-monospace" role="alert">
+      TOTAL TIME = 0:00:00
+    </div>
+    <button id="go" class="btn btn-success btn-lg mx-auto d-block">
+      <span class="fa fa-thumbs-up"></span> GO
+    </button>
+    </p>
   </div>
   <!----------------------------------------------------------------------
                           C A M E R A     S E T U P
   ----------------------------------------------------------------------->
   <div id="tab_cam_config" class="tab-pane">
     <label for="shutter_speed">SHUTTER SPEED</label>
-    <select id="shutter_speed" class="form-control" value=0>
-      <option value='0'       >AUTO</option>
-      <option value='2000000' >2'</option>
-      <option value='1000000' >1'</option>
-      <option value='500000'  >1/2</option>
-      <option value='250000'  >1/4</option>
-      <option value='125000'  >1/8</option>
-      <option value='62500'   >1/16</option>
-      <option value='31250'   >1/32</option>
-      <option value='15625'   >1/64</option>
-      <option value='7813'    >1/128</option>
-      <option value='3906'    >1/256</option>
-      <option value='1953'    >1/512</option>
-      <option value='978'     >1/1024</option>
-      <option value='489'     >1/2048</option>
-      <option value='400'     >400us</option>
-      <option value='350'     >350us</option>
-      <option value='300'     >300us</option>
-      <option value='250'     >250us</option>
-      <option value='200'     >200us</option>
-      <option value='150'     >150us</option>
-      <option value='100'     >100us</option>
-    </select>
+    <select id="shutter_speed" class="form-control" value=0></select>
     <label for="iso">ISO</label>
-    <select id="iso" class="form-control" value=0>
-        <option value='0'   >AUTO</option>
-        <option value='100' >100</option>
-        <option value='200' >200</option>
-        <option value='320' >320</option>
-        <option value='400' >400</option>
-        <option value='500' >500</option>
-        <option value='640' >640</option>
-        <option value='800' >800</option>
-    </select>
+    <select id="iso" class="form-control" value=0></select>
     <p>
     <div class="text-center">
     <button id="take" type="button" class="btn btn-success btn-lg">
@@ -78,24 +59,96 @@
     <br/><br/>
   </div>
   </div>
+
 <script>
+  ws = null
+  False = false
+  True = true
+  shutter_speed_options = {
+    "AUTO" : 0, "2'" : 2000000, "1'" : 1000000, "1/2" : 500000, "1/4" : 250000,
+    "1/8" : 125000, "1/16" : 62500, "1/32" : 31250, "1/64" : 15625, "1/128" : 7813,
+    "1/256" : 3906, "1/512" : 1953, "1/1024" : 978, "1/2048" : 489, "400us" : 400,
+    "350us" : 350, "300us" : 300, "250us" : 250, "200us" : 200, "150us" : 150,
+    "100us" : 100,
+  }
+  iso_options = {
+    "AUTO" : 0, "100": 100, "200" : 200, "320" : 320, "400" : 400, "500" : 500,
+    "640" : 640, "800" : 800
+  }
+
   // on page load
   $(document).ready(function () {
-    $("#shutter_speed").change(function (event) {
-        send_config()
+    console.log("hello")
+    set_host_date()
+    if ({{ tl_running }}) {
+      // disable other tabs
+      $("#li_cam_config").addClass("disabled")
+      $("#li_liveview").addClass("disabled")
+      // disable edits
+      $("#delta_time").prop( "disabled", true )
+      $("#total_imgs").prop( "disabled", true )
+      // change GO button to STOP
+      $("#go").addClass("btn-danger")
+      $("#go").removeClass("btn-succes")
+      $("#go").html("<span class='fa fa-close'></span> STOP")
+      $("#go").click(handle_go)
+      // open websocket
+      ws = new WebSocket("ws://"+location.host+"/ws")
+      ws.onmessage = handle_ws
+    } else {
+      // load options into selects
+      $.each(shutter_speed_options, function(key, value) {
+        $("#shutter_speed").append("<option value="+value+">"+key+"</option>")
       })
-      $("#iso").change(function (event) {
-        send_config()
+      $.each(iso_options, function(key, value) {
+        $("#iso").append("<option value="+value+">"+key+"</option>")
       })
-      $("#take").click(function (event) {
-        return get_preview()
-      })
+      // callbacks for any configruation change
+      $("#delta_time").change(send_config)
+      $("#total_imgs").change(send_config)
+      $("#shutter_speed").change(send_config)
+      $("#iso").change(send_config)
+      // callbacks for buttons
+      $("#go").click(handle_go)
+      $("#take").click(get_preview)
+    }
   })
 
-  // send current camera configuration settings
+  // set host date to client
+  function set_host_date() {
+    $.ajax({
+      url: '/',
+      method: 'POST',
+      data: JSON.stringify( {
+        command: "set_date",
+        date: (new Date()).toString()
+      })
+    })
+  }
+
+  // handle websocket
+  function handle_ws(message) {
+    tl_status = JSON.parse(message.data)
+    console.log(tl_status)
+
+    if (tl_status.tl_running) {
+      time_to_next = seconds_to_timestring(parseInt(tl_status.time_to_next))
+      time_remaining = seconds_to_timestring(parseInt(tl_status.time_remaining))
+      $("#tl_summary").html("TIME TO NEXT: " + time_to_next + "</br>"
+                          + "TIME REMAINING: " + time_remaining + "</br>"
+                          + "TAKEN: " + tl_status.images_taken)
+    } else {
+      ws.close()
+      location.reload()
+    }
+  }
+
+  // send current configuration settings
   function send_config() {
     json_data = JSON.stringify({
       command: "update_config",
+      delta_time : $("#delta_time").val(),
+      total_imgs : $("#total_imgs").val(),
       shutter_speed: $("#shutter_speed").val(),
       iso: $("#iso").val(),
     })
@@ -106,10 +159,52 @@
     })
   }
 
+  // handle GO (or STOP) button press
+  function handle_go() {
+    current_state = $("#go").text().trim().toUpperCase()
+    if (current_state == 'GO') {
+      start_timelapse()
+    } else {
+      stop_timelapse()
+    }
+  }
+
+  // start timelapse
+  function start_timelapse() {
+    if (window.confirm("Start Timelapse?")) {
+      json_data = JSON.stringify({command : "start_timelapse"})
+      $.ajax({
+        url: '/',
+        method: 'POST',
+        data: json_data,
+        success: function() {
+          location.reload()
+        }
+      })
+    }
+    return false
+  }
+
+  // stop timelapse
+  function stop_timelapse() {
+    if (window.confirm("Stop Timelapse?")) {
+      json_data = JSON.stringify({command : "stop_timelapse"})
+      $.ajax({
+        url: '/',
+        method: 'POST',
+        data: json_data,
+        success: function() {
+          location.reload()
+        }
+      })
+    }
+    return false
+  }
+
   // take preview still image
   function get_preview() {
     $("#preview").attr("src","static/spinner.gif");
-    json_data = JSON.stringify({command : "get_preview"});
+    json_data = JSON.stringify({command : "get_preview"})
     $.ajax({
       url : '/',
       method : 'POST',
@@ -125,7 +220,7 @@
   // start live view
   $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
     if ($(e.target).attr("href") === "#tab_liveview") {
-      json_data = JSON.stringify({command : "start_liveview"});
+      json_data = JSON.stringify({command : "start_liveview"})
       $.ajax({
         url: '/',
         method: 'POST',
@@ -133,7 +228,7 @@
         success: function(json_resp) {
           resp = JSON.parse(json_resp);
           stream_url = resp['url'];
-          $("#liveview").attr("src", stream_url);
+          $("#liveview").attr("src", stream_url)
         }
       })
     }
@@ -142,17 +237,36 @@
   // stop live view
   $('a[data-toggle="tab"]').on('hide.bs.tab', function (e) {
     if ($(e.target).attr("href") === "#tab_liveview") {
-    json_data = JSON.stringify({command : "stop_liveview"});
+    json_data = JSON.stringify({command : "stop_liveview"})
     $.ajax({
         url: '/',
         method: 'POST',
         data: json_data,
         success: function(json_resp, status) {
-        $("#liveview").attr("src", "static/test_pattern.jpg");
+          $("#liveview").attr("src", "static/test_pattern.jpg")
         }
     })
     }
   })
+
+  // helper function for time formatting
+  function seconds_to_timestring(value) {
+    var h = Math.floor(value / 3600);
+    var m = Math.floor((value % 3600) / 60);
+    var s = value % 60;
+
+    if (isNaN(h) || isNaN(m) || isNaN(s)) {
+      h = 0;
+      m = 0;
+      s = 0;
+    }
+
+    if (h < 10) {h = "0" + h;}
+    if (m < 10) {m = "0" + m;}
+    if (s < 10) {s = "0" + s;}
+
+    return h + ":" + m + ":" + s;
+  }
 </script>
 </body>
 </html>
