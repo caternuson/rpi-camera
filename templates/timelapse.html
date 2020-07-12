@@ -172,6 +172,7 @@
   // start timelapse
   function start_timelapse() {
     if (window.confirm("Start Timelapse?")) {
+      send_config()
       json_data = JSON.stringify({command : "start_timelapse"})
       $.ajax({
         url: '/',

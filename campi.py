@@ -29,6 +29,7 @@ class Campi():
     def __init__(self):
 
         self._settings = {}
+        # CAMERA SETTINGS
         self._settings['sensor_mode'] = 0               # 0 (auto), 2 (1-15fps), 3 (0.1666-1fps) (see doc)
         self._settings['resolution'] = (2592, 1944)     # full resolution 2592x1944 (v1)
         self._settings['iso'] = 0                       # 0 (auto), 100, 200, 320, 400, 500, 640, 800
@@ -43,6 +44,9 @@ class Campi():
         self._settings['hvflip'] = (True, True)         # horizontal/vertical flip
         self._settings['quality'] = 100                 # 0 - 100, applies only to JPGs
         self._settings['awb_gains'] = None
+        # TIME LAPSE SETTINGS
+        self._settings['timelapse_length'] = 5
+        self._settings['timelapse_interval'] = 10
 
         # helper threads
         self._mjpeg_thread = None
@@ -169,7 +173,23 @@ class Campi():
     def saturation(self, val):
         self._settings['saturation'] = val
 
-    def start_timelapse(self, length=5, interval=10):
+    @property
+    def timelapse_length(self):
+        return self._settings['timelapse_length']
+
+    @timelapse_length.setter
+    def timelapse_length(self, val):
+        self._settings['timelapse_length'] = val
+
+    @property
+    def timelapse_interval(self):
+        return self._settings['timelapse_interval']
+
+    @timelapse_interval.setter
+    def timelapse_interval(self, val):
+        self._settings['timelapse_interval'] = val
+
+    def start_timelapse(self):
         """Start a timelapse capture with the given length and interval."""
         if self._timelapse_thread:
             if self._timelapse_thread.is_alive():
@@ -177,8 +197,8 @@ class Campi():
             else:
                 self._timelapse_thread = None
         self._timelapse_thread = timelapser.TimeLapser(camera=self,
-                                                       length=length,
-                                                       interval=interval)
+                                                       length=self._settings['timelapse_length'],
+                                                       interval=self._settings['timelapse_interval'])
         self._timelapse_thread.start()
 
     def stop_timelapse(self):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #===========================================================================
 # camera_server.py
 #
@@ -73,6 +73,10 @@ class MainHandler(tornado.web.RequestHandler):
 
     def _update_config(self):
         json_data = json.loads(self.request.body.decode('utf-8'))
+        if 'delta_time' in json_data:
+            camera.timelapse_interval = int(json_data['delta_time'])
+        if 'total_imgs' in json_data:
+            camera.timelapse_length = int(json_data['total_imgs'])
         if 'shutter_speed' in json_data:
             camera.shutter_speed = int(json_data['shutter_speed'])
         if 'iso' in json_data:
