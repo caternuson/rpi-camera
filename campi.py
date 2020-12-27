@@ -139,7 +139,26 @@ class Campi():
 
     @shutter_speed.setter
     def shutter_speed(self, val):
-        self._settings['shutter_speed'] = val
+        '''Setting shutter speed manually requires some effort. The acceptable
+        values are limited by the sensor_mode and frame_rate. Here, those values
+        are altered as needed to support the specified shutter speed.
+        '''
+        if val != 0:
+            # force settings to support non-zero (non-auto) shutter speed
+            self._settings['exposure_mode'] = 'off'
+            val = val if val <= 6000000 else 6000000
+            if val > 1000000:
+                self.settings['sensor_mode'] = 3        # 6 secs max (0.1666-1fps)
+                self.settings['framerate'] = min(Fraction(1),Fraction(1.e6/val))
+            else:
+                self.settings['sensor_mode'] = 2        # 1 sec max (1-15fps)
+                self.settings['framerate'] = min(Fraction(15),Fraction(1.e6/val))
+            self.settings['shutter_speed'] = val        # and finally, set shutter speed
+        else:
+            # auto mode
+            self.settings['exposure_mode'] = 'auto'
+            self.settings['sensor_mode'] = 0
+            self.settings['shutter_speed'] = val
 
     @property
     def brightness(self):
